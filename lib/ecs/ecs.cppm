@@ -159,6 +159,24 @@ export namespace ecs {
             static constexpr entity to_entity(std::size_t id) noexcept { return entity(id); }
     };
 
+    class system;
+
+    class registry : public entity_container {
+        private:
+            std::forward_list<system> _systems;
+
+        public:
+            template<typename... Args>
+            constexpr const system &register_system(std::invocable<std::add_lvalue_reference_t<Args>...> auto f) noexcept;
+
+            inline bool remove_system(const system &system) noexcept
+            {
+                return _systems.remove_if([&system](const auto &s){ return std::addressof(s) == std::addressof(system); });
+            }
+
+            void run_systems();
+    };
+
     class system {
         template<typename... Args, std::invocable<std::add_lvalue_reference_t<Args>...> Function>
         constexpr system(Function &&f, std::typeset<Args...>) noexcept;
@@ -172,6 +190,9 @@ export namespace ecs {
         template<typename Function, typename... Args>
         static constexpr void invoke(Function &&f, entity on, std::convertible_to<const entity_container &> auto &ec, bool passContainer = false) noexcept;
 
+        template<typename... Args>
+        friend constexpr const system &registry::register_system(std::invocable<std::add_lvalue_reference_t<Args>...> auto f) noexcept;
+
         public:
             system(system &&system) noexcept : update(std::move(system.update)) {}
 
@@ -179,6 +200,13 @@ export namespace ecs {
     };
 
     const entity_container::component_container entity_container::_emptyComponents;
+
+    template<typename... Args>
+    constexpr const system &registry::register_system(std::invocable<std::add_lvalue_reference_t<Args>...> auto f) noexcept
+    {
+        _systems.push_front(std::move(system(f, std::make_typeset<Args...>())));
+        return _systems.front();
+    }
 
     template<typename Function, typename... Args>
     constexpr void system::invoke(Function &&f, entity on, std::convertible_to<const entity_container &> auto &ec, bool passContainer) noexcept

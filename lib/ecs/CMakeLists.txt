@@ -5,4 +5,8 @@ target_sources(ecs PUBLIC
         FILES ecs.cppm
 )
 
+target_sources(ecs PRIVATE
+    registry.cpp
+)
+
 target_link_libraries(ecs PRIVATE utils)
