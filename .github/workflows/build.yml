@@ -1,0 +1,41 @@
+name: CMake on multiple platforms
+
+on:
+  push: {}
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        preset: [default]
+        cpp_compiler: [g++, clang++, cl]
+        include:
+          - os: ubuntu-latest
+            cpp_compiler: clang++
+            configure_preset_additional_args: "['-DCMAKE_CXX_COMPILER=clang++-19']"
+        exclude:
+          - os: windows-latest
+          - os: ubuntu-latest
+            cpp_compiler: g++
+          - os: ubuntu-latest
+            cpp_compiler: cl
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install LLVM toolchain
+        if: matrix.cpp_compiler == 'clang++'
+        run: wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 19 all
+
+      - uses: lukka/get-cmake@latest
+
+      - name: CMake
+        uses: lukka/run-cmake@v10
+        with:
+          configurePreset: ${{ matrix.preset }}
+          configurePresetAdditionalArgs: ${{ matrix.configure_preset_additional_args }}
+          buildPreset: ${{ matrix.preset }}
+          testPreset: ${{ matrix.preset }}
