@@ -1,6 +1,7 @@
 export module ecs;
 
 import std;
+import utils;
 
 export namespace ecs {
     struct entity {
@@ -158,5 +159,50 @@ export namespace ecs {
             static constexpr entity to_entity(std::size_t id) noexcept { return entity(id); }
     };
 
+    class system {
+        template<typename... Args, std::invocable<std::add_lvalue_reference_t<Args>...> Function>
+        constexpr system(Function &&f, std::typeset<Args...>) noexcept;
+        template<typename... Args, std::invocable<entity_container &, std::add_lvalue_reference_t<Args>...> Function>
+        constexpr system(Function &&f, std::typeset<Args...>) noexcept;
+        template<typename... Args, std::invocable<const entity_container &, std::add_lvalue_reference_t<Args>...> Function>
+        constexpr system(Function &&f, std::typeset<Args...>) noexcept;
+
+        system(const system &) = delete;
+
+        template<typename Function, typename... Args>
+        static constexpr void invoke(Function &&f, entity on, std::convertible_to<const entity_container &> auto &ec, bool passContainer = false) noexcept;
+
+        public:
+            system(system &&system) noexcept : update(std::move(system.update)) {}
+
+            const std::function<void(entity_container &, entity)> update;
+    };
+
     const entity_container::component_container entity_container::_emptyComponents;
+
+    template<typename Function, typename... Args>
+    constexpr void system::invoke(Function &&f, entity on, std::convertible_to<const entity_container &> auto &ec, bool passContainer) noexcept
+    {
+        if ((ec.get_components(on).contains(typeid(Args)) && ...))
+            return;
+        auto fn = passContainer
+            ? std::bind_front(std::forward<Function>(f), ec)
+            : std::forward<Function>(f);
+        std::invoke(fn, std::any_cast<std::add_lvalue_reference_t<Args>>(ec.get_components(on).at(typeid(Args)))...);
+    }
+
+    template<typename... Args, std::invocable<std::add_lvalue_reference_t<Args>...> Function>
+    constexpr system::system(Function &&f, std::typeset<Args...>) noexcept
+        : update([&f](entity_container &ec, entity e){ invoke<Function, Args...>(std::forward<Function>(f), e, ec); })
+    {}
+
+    template<typename... Args, std::invocable<entity_container &, std::add_lvalue_reference_t<Args>...> Function>
+    constexpr system::system(Function &&f, std::typeset<Args...>) noexcept
+        : update([&f](entity_container &ec, entity e){ invoke<Function, Args...>(std::forward<Function>(f), e, ec, true); })
+    {}
+
+    template<typename... Args, std::invocable<const entity_container &, std::add_lvalue_reference_t<Args>...> Function>
+    constexpr system::system(Function &&f, std::typeset<Args...>) noexcept
+        : update([&f](const entity_container &ec, entity e){ invoke<Function, Args...>(std::forward<Function>(f), e, ec, true); })
+    {}
 }
