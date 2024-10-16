@@ -1,0 +1,12 @@
+add_library(ecs)
+
+target_sources(ecs PUBLIC
+    FILE_SET CXX_MODULES
+        FILES ecs.cppm
+)
+
+target_sources(ecs PRIVATE
+    registry.cpp
+)
+
+target_link_libraries(ecs PRIVATE utils)
