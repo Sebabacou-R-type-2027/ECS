@@ -8,34 +8,49 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     strategy:
+      fail-fast: false
+
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        preset: [default]
-        cpp_compiler: [g++, clang++, cl]
+        os: [ubuntu-24.04, windows-latest]
+        preset: [default, release]
+        compiler: [gnu, llvm, msvc]
         include:
-          - os: ubuntu-latest
-            cpp_compiler: clang++
-            configure_preset_additional_args: "['-DCMAKE_CXX_COMPILER=clang++-19']"
+          - os: ubuntu-24.04
+            compiler: gnu
+            cxx: g++-14
+          - os: ubuntu-24.04
+            compiler: llvm
+            package: 'libc++-18-dev libc++abi-18-dev'
         exclude:
           - os: windows-latest
-          - os: ubuntu-latest
-            cpp_compiler: g++
-          - os: ubuntu-latest
-            cpp_compiler: cl
+            compiler: gnu
+          - os: windows-latest
+            compiler: llvm
+          - os: ubuntu-24.04
+            compiler: msvc
 
+
+    env:
+      CMAKE_WORKFLOW_PRESET: ${{ format('{0}{1}', matrix.preset, (matrix.compiler == 'llvm' && '-llvm' || '')) }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install LLVM toolchain
-        if: matrix.cpp_compiler == 'clang++'
-        run: wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 19 all
+      - if: matrix.os == 'ubuntu-24.04' && matrix.package
+        run: |
+          sudo add-apt-repository universe
+          sudo apt-get update
+          sudo apt-get install -y ${{ matrix.package }}
 
       - uses: lukka/get-cmake@latest
 
-      - name: CMake
-        uses: lukka/run-cmake@v10
+      - uses: lukka/run-cmake@v10
+        if: matrix.cxx
+        env:
+          CXX: ${{ matrix.cxx }}
         with:
-          configurePreset: ${{ matrix.preset }}
-          configurePresetAdditionalArgs: ${{ matrix.configure_preset_additional_args }}
-          buildPreset: ${{ matrix.preset }}
-          testPreset: ${{ matrix.preset }}
+          workflowPreset: ${{ env.CMAKE_WORKFLOW_PRESET }}
+
+      - uses: lukka/run-cmake@v10
+        if: matrix.cxx != true
+        with:
+          workflowPreset: ${{ env.CMAKE_WORKFLOW_PRESET }}
