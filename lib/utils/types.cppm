@@ -1,6 +1,14 @@
+#if __cpp_lib_modules < 202207L
+module;
+
+#include <tuple>
+#include <type_traits>
+#endif
 export module utils:types;
 
+#if __cpp_lib_modules >= 202207L
 import std;
+#endif
 
 export namespace std {
     template<typename T, typename>

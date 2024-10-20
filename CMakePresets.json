@@ -10,11 +10,8 @@
             "name": "base",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
+                "CMAKE_CXX_STANDARD": "26",
                 "CMAKE_EXPERIMENTAL_CXX_IMPORT_STD": "0e5b6991-d74f-4b3d-a41c-cf096e0b2508",
-                "CMAKE_CXX_MODULE_STD": "ON",
-                "CMAKE_CXX_FLAGS": "-stdlib=libc++",
-                "CMAKE_EXE_LINKER_FLAGS": "-stdlib=libc++",
-                "CMAKE_CXX_COMPILER": "clang++",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "YES",
                 "CMAKE_COLOR_DIAGNOSTICS": "ON"
             }
