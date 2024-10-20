@@ -9,34 +9,51 @@
         {
             "name": "base",
             "binaryDir": "${sourceDir}/build",
+            "generator": "Ninja Multi-Config",
             "cacheVariables": {
+                "CMAKE_CXX_STANDARD": "26",
                 "CMAKE_EXPERIMENTAL_CXX_IMPORT_STD": "0e5b6991-d74f-4b3d-a41c-cf096e0b2508",
-                "CMAKE_CXX_MODULE_STD": "ON",
-                "CMAKE_CXX_FLAGS": "-stdlib=libc++",
-                "CMAKE_EXE_LINKER_FLAGS": "-stdlib=libc++",
-                "CMAKE_CXX_COMPILER": "clang++",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "YES",
                 "CMAKE_COLOR_DIAGNOSTICS": "ON"
             }
         },
         {
-            "name": "default",
+            "name": "llvm",
             "inherits": "base",
-            "generator": "Ninja Multi-Config"
+            "environment": {
+                "CXX": "clang++",
+                "CXXFLAGS": "$penv{CXXFLAGS} -stdlib=libc++",
+                "LDFLAGS": "$penv{LDFLAGS} -stdlib=libc++"
+            }
         }
     ],
     "buildPresets": [
         {
             "name": "default",
-            "configurePreset": "default",
+            "configurePreset": "base",
             "configuration": "Debug"
+        },
+        {
+            "name": "llvm",
+            "inherits": "default",
+            "configurePreset": "llvm"
+        },
+        {
+            "name": "release",
+            "configurePreset": "base",
+            "configuration": "Release"
+        },
+        {
+            "name": "release-llvm",
+            "inherits": "release",
+            "configurePreset": "llvm"
         }
     ],
     "testPresets": [
         {
-            "name": "base",
-            "configuration": "Debug",
+            "name": "default",
             "configurePreset": "base",
+            "configuration": "Debug",
             "output": {
                 "shortProgress": true,
                 "outputOnFailure": true,
@@ -44,9 +61,94 @@
             }
         },
         {
+            "name": "llvm",
+            "inherits": "default",
+            "configurePreset": "llvm"
+        },
+        {
+            "name": "release",
+            "configurePreset": "base",
+            "configuration": "Release",
+            "output": {
+                "shortProgress": false,
+                "outputOnFailure": false,
+                "verbosity": "default"
+            }
+        },
+        {
+            "name": "release-llvm",
+            "inherits": "release",
+            "configurePreset": "llvm"
+        }
+    ],
+    "workflowPresets": [
+        {
             "name": "default",
-            "inherits": "base",
-            "configurePreset": "default"
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "base"
+                },
+                {
+                    "type": "build",
+                    "name": "default"
+                },
+                {
+                    "type": "test",
+                    "name": "default"
+                }
+            ]
+        },
+        {
+            "name": "default-llvm",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "llvm"
+                },
+                {
+                    "type": "build",
+                    "name": "llvm"
+                },
+                {
+                    "type": "test",
+                    "name": "llvm"
+                }
+            ]
+        },
+        {
+            "name": "release",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "base"
+                },
+                {
+                    "type": "build",
+                    "name": "release"
+                },
+                {
+                    "type": "test",
+                    "name": "release"
+                }
+            ]
+        },
+        {
+            "name": "release-llvm",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "llvm"
+                },
+                {
+                    "type": "build",
+                    "name": "release-llvm"
+                },
+                {
+                    "type": "test",
+                    "name": "release-llvm"
+                }
+            ]
         }
     ]
 }
