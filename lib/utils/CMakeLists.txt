@@ -5,3 +5,9 @@ target_sources(utils PUBLIC
         FILES utils.cppm
         types.cppm
 )
+
+install(TARGETS utils EXPORT ecs
+    DESTINATION utils
+    COMPONENT utils
+    FILE_SET CXX_MODULES DESTINATION modules COMPONENT modules
+)

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.30 FATAL_ERROR)
 
-project(R-Type/ECS LANGUAGES CXX)
+project(ECS LANGUAGES CXX)
 
 # Minimal versions
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
@@ -22,3 +22,12 @@ else()
 endif()
 
 add_subdirectory(lib)
+
+install(EXPORT ecs DESTINATION .
+    NAMESPACE ecs::
+    CXX_MODULES_DIRECTORY modules
+    COMPONENT core
+    EXPORT_PACKAGE_DEPENDENCIES
+)
+
+include(CPack)

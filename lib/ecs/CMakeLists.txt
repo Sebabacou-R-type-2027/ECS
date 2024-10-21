@@ -10,3 +10,9 @@ target_sources(ecs PRIVATE
 )
 
 target_link_libraries(ecs PRIVATE utils)
+
+install(TARGETS ecs EXPORT ecs
+    DESTINATION core
+    COMPONENT core
+    FILE_SET CXX_MODULES DESTINATION modules COMPONENT modules
+)
