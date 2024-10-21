@@ -7,3 +7,7 @@ target_sources(utils PUBLIC
             types.cppm
             utilities.cppm
 )
+
+install(TARGETS utils EXPORT main
+    FILE_SET CXX_MODULES DESTINATION modules
+)
