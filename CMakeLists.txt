@@ -21,4 +21,7 @@ else()
     message(WARNING "Compiler does not support `import std;`")
 endif()
 
+# Dependencies
+find_package(SFML 2.6 COMPONENTS graphics window system CONFIG REQUIRED)
+
 add_subdirectory(lib)
