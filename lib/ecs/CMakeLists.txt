@@ -9,3 +9,4 @@ target_sources(ecs PUBLIC
 target_link_libraries(ecs PRIVATE utils)
 
 add_subdirectory(components)
+add_subdirectory(systems)
