@@ -1,3 +1,7 @@
+# Build files
+/build
+/vcpkg_installed
+
 # IDE
 /.cache
 /.idea
