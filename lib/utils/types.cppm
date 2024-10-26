@@ -24,7 +24,7 @@ export namespace std {
     using replace_index_t = typename replace_index<T, 0>::type;
 
     template<typename... T>
-    struct typeset {
+    struct typeset_t {
         template<typename U>
         static constexpr bool contains = (std::is_same_v<T, U> || ...);
 
@@ -35,13 +35,13 @@ export namespace std {
     };
 
     template<typename... T>
-    consteval auto make_typeset() noexcept { return typeset<T...>{}; }
+    constexpr typeset_t<T...> typeset = {};
 
     template<typename T, std::size_t N>
     consteval auto make_uniform_typeset() noexcept
     {
         return []<std::size_t... I>(std::index_sequence<I...>) consteval noexcept {
-            return make_typeset<std::replace_index_t<T, I>...>();
+            return typeset<std::replace_index_t<T, I>...>();
         }(std::make_index_sequence<N>{});
     }
 }
