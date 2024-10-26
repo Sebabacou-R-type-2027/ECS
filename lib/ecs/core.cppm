@@ -150,7 +150,7 @@ export namespace ecs {
                 return _systems.remove_if([&system](const auto &s){ return std::addressof(s) == std::addressof(system); });
             }
 
-            void run_systems();
+            constexpr void run_systems() noexcept;
     };
 
     class system {
@@ -177,7 +177,7 @@ export namespace ecs {
             std::function<void(entity_container &, entity)> update;
     };
 
-    void registry::run_systems()
+    constexpr void registry::run_systems() noexcept
     {
         std::ranges::for_each(this->get_entities(), [this](auto e) constexpr noexcept {
             std::ranges::for_each(_systems, [this, e](const system &system) constexpr noexcept {
@@ -203,21 +203,29 @@ export namespace ecs {
 
     template<typename... Args, std::invocable<std::add_lvalue_reference_t<Args>...> Function>
     constexpr system::system(Function &&f, std::typeset<Args...>) noexcept
-        : update([&f](entity_container &ec, entity e){ invoke(std::forward<Function>(f), e, ec, std::make_typeset<Args...>()); })
+        : update([&f](entity_container &ec, entity e) constexpr noexcept {
+            invoke(std::forward<Function>(f), e, ec, std::make_typeset<Args...>());
+        })
     {}
 
     template<typename... Args, std::invocable<entity_container &, std::add_lvalue_reference_t<Args>...> Function>
     constexpr system::system(Function &&f, std::typeset<Args...>) noexcept
-        : update([&f](entity_container &ec, entity e){ invoke(std::bind_front(std::forward<Function>(f), std::ref(ec)), e, ec, std::make_typeset<Args...>()); })
+        : update([&f](entity_container &ec, entity e) constexpr noexcept {
+            invoke(std::bind_front(std::forward<Function>(f), std::ref(ec)), e, ec, std::make_typeset<Args...>());
+        })
     {}
 
     template<typename... Args, std::invocable<entity, std::add_lvalue_reference_t<Args>...> Function>
     constexpr system::system(Function &&f, std::typeset<Args...>) noexcept
-        : update([&f](entity_container &ec, entity e){ invoke(std::bind_front(std::forward<Function>(f), e), e, ec, std::make_typeset<Args...>()); })
+        : update([&f](entity_container &ec, entity e) constexpr noexcept {
+            invoke(std::bind_front(std::forward<Function>(f), e), e, ec, std::make_typeset<Args...>());
+        })
     {}
 
     template<typename... Args, std::invocable<entity, entity_container &, std::add_lvalue_reference_t<Args>...> Function>
     constexpr system::system(Function &&f, std::typeset<Args...>) noexcept
-        : update([&f](entity_container &ec, entity e){ invoke(std::bind_front(std::forward<Function>(f), e, std::ref(ec)), e, ec, std::make_typeset<Args...>()); })
+        : update([&f](entity_container &ec, entity e) constexpr noexcept {
+            invoke(std::bind_front(std::forward<Function>(f), e, std::ref(ec)), e, ec, std::make_typeset<Args...>());
+        })
     {}
 }
