@@ -11,10 +11,10 @@ import std;
 #endif
 
 export namespace ecs::systems::gui {
-    void reposition(entity_container &ec, components::gui::drawable &drawable, const components::position &position) noexcept
+    void reposition(entity_container &ec, components::gui::drawable &drawable, const components::position &position, components::gui::animations &animations) noexcept
     {
         // components::gui::asset_manager &asset_manager = *ec.get_entity_component<components::gui::asset_manager>(drawable.asset_manager);
-        for (const auto &pair : drawable.elements) {
+        for (auto &pair : drawable.elements) {
             if (auto *sprite = dynamic_cast<sf::Sprite *>(pair.second.element.get()); sprite) {
                 sprite->setPosition(position.x, position.y);
                 // sprite->setTexture(asset_manager.get_texture(pair.second.asset_key.value()));
@@ -23,6 +23,27 @@ export namespace ecs::systems::gui {
                 // text->setFont(asset_manager.get_font(pair.second.asset_key.value()));
             } else if (auto *shape = dynamic_cast<sf::Shape *>(pair.second.element.get()); shape)
                 shape->setPosition(position.x, position.y);
+        }
+        for (auto &pair : animations.elements)
+            pair.second.sprite.setPosition(position.x, position.y);
+    }
+
+    void animate(entity_container &ec, components::gui::animations &animation) noexcept
+    {
+        for (auto &pair : animation.elements) {
+            auto entity = ec.get_entity(pair.first);
+            auto window = entity.and_then([&ec](auto e){
+                return ec.get_entity_component<components::gui::window>(e);
+            });
+            auto clock = entity.and_then([&ec](auto e){
+                return ec.get_entity_component<components::gui::animation_clock>(e);
+            });
+            if (clock) {
+                pair.second.update(clock->get().delta);
+            }
+            if (window) {
+                window->get().window.draw(pair.second.sprite);
+            }
         }
     }
 
