@@ -37,13 +37,10 @@ export namespace ecs {
             using entity_components = std::unordered_map<std::size_t, component_container>;
 
         private:
-            static const component_container _emptyComponents;
             entity_components _components;
             std::vector<bool> _entities;
             std::size_t _nextEntity = 0;
 
-        protected:
-            entity_container() noexcept = default;
 
         public:
             entity_container(const entity_container &) = delete;
@@ -115,44 +112,6 @@ export namespace ecs {
                     : std::nullopt;
             }
 
-            constexpr component_container &get_components(entity from)
-            {
-                if (!get_entity(from))
-                    throw entity_not_found_error(from);
-                return _components[from];
-            }
-
-            constexpr const component_container &get_components(entity from) const noexcept
-            {
-                if (!get_entity(from))
-                    return _emptyComponents;
-                if (_components.contains(from))
-                    return _components.at(from);
-                return _emptyComponents;
-            }
-
-            template<typename Component>
-            constexpr auto get_components() noexcept
-            {
-                return _components | std::views::values | std::views::filter([](component_container &components){
-                    return components.contains(typeid(Component))
-                        && components.at(typeid(Component)).type() == typeid(Component);
-                }) | std::views::transform([](component_container &components){
-                    return std::any_cast<Component &>(components.at(typeid(Component)));
-                });
-            }
-
-            template<typename Component>
-            constexpr auto get_components() const noexcept
-            {
-                return _components | std::views::values | std::views::filter([](const component_container &components){
-                    return components.contains(typeid(Component))
-                        && components.at(typeid(Component)).type() == typeid(Component);
-                }) | std::views::transform([](component_container &components){
-                    return std::any_cast<const Component &>(components.at(typeid(Component)));
-                });
-            }
-
             template<typename Component>
             constexpr bool remove_component(entity from) noexcept
             {
@@ -218,9 +177,6 @@ export namespace ecs {
             std::function<void(entity_container &, entity)> update;
     };
 
-    const entity_container::component_container entity_container::_emptyComponents;
-
-
     void registry::run_systems()
     {
         std::ranges::for_each(this->get_entities(), [this](auto e) constexpr noexcept {
@@ -240,7 +196,7 @@ export namespace ecs {
     template<typename Function, typename... Args>
     constexpr void system::invoke(Function &&f, entity on, entity_container &ec, std::typeset<Args...>) noexcept
     {
-        if (!(ec.get_components(on).contains(typeid(Args)) && ...))
+        if (!(ec.get_entity_component<Args>(on) && ...))
             return;
         std::invoke(std::forward<Function>(f), ec.get_entity_component<Args>(on)->get()...);
     }
