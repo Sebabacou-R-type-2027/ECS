@@ -1,7 +1,6 @@
 name: CMake on multiple platforms
 
-on:
-  push: {}
+on: [push, workflow_dispatch]
 
 jobs:
   build:
@@ -16,11 +15,21 @@ jobs:
         compiler: [gnu, llvm, msvc]
         include:
           - os: ubuntu-24.04
+            build-deps:
+              - libx11-dev
+              - libxrandr-dev
+              - libxcursor-dev
+              - libxi-dev
+              - libudev-dev
+              - libgl1-mesa-dev
+          - os: ubuntu-24.04
             compiler: gnu
             cxx: g++-14
           - os: ubuntu-24.04
             compiler: llvm
-            package: 'libc++-18-dev libc++abi-18-dev'
+            packages:
+              - libc++-18-dev
+              - libc++abi-18-dev
         exclude:
           - os: windows-latest
             compiler: gnu
@@ -29,19 +38,27 @@ jobs:
           - os: ubuntu-24.04
             compiler: msvc
 
-
     env:
       CMAKE_WORKFLOW_PRESET: ${{ format('{0}{1}', matrix.preset, (matrix.compiler == 'llvm' && '-llvm' || '')) }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
 
-      - if: matrix.os == 'ubuntu-24.04' && matrix.package
+      - if: matrix.os == 'ubuntu-24.04' && matrix.build-deps
         run: |
-          sudo add-apt-repository universe
           sudo apt-get update
-          sudo apt-get install -y ${{ matrix.package }}
+          sudo apt-get install -y ${{ join(matrix.build-deps, ' ') }}
+
+      - if: matrix.os == 'ubuntu-24.04' && matrix.packages
+        run: sudo apt-get install -y ${{ join(matrix.packages, ' ') }}
 
       - uses: lukka/get-cmake@latest
+
+      - uses: lukka/run-vcpkg@v11
+        id: runvcpkg
+        with:
+          vcpkgJsonGlob: '**/vcpkg.json'
 
       - uses: lukka/run-cmake@v10
         if: matrix.cxx
@@ -51,6 +68,6 @@ jobs:
           workflowPreset: ${{ env.CMAKE_WORKFLOW_PRESET }}
 
       - uses: lukka/run-cmake@v10
-        if: matrix.cxx != true
+        if: "!(matrix.cxx)"
         with:
           workflowPreset: ${{ env.CMAKE_WORKFLOW_PRESET }}
