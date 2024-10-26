@@ -20,8 +20,19 @@ import std;
 #endif
 import utils;
 
+/**
+ * @brief Entity Component System (ECS) core namespace
+ */
 export namespace ecs {
+    /**
+     * @brief Opaque type representing an entity
+     */
     struct entity {
+        /**
+         * @brief Convert the entity to its underlying unique identifier in the @ref entity_container
+         *
+         * @return std::size_t
+         */
         constexpr operator std::size_t() const noexcept { return _id; }
 
         private:
@@ -31,26 +42,36 @@ export namespace ecs {
             std::size_t _id;
     };
 
+    /**
+     * @brief Class managing entities and their components
+     */
     class entity_container {
-        public:
-            using component_container = std::unordered_map<std::type_index, std::any>;
-            using entity_components = std::unordered_map<std::size_t, component_container>;
+        using component_container = std::unordered_map<std::type_index, std::any>;
+        using entity_components = std::unordered_map<std::size_t, component_container>;
 
-        private:
-            entity_components _components;
-            std::vector<bool> _entities;
-            std::size_t _nextEntity = 0;
+        entity_components _components;
+        std::vector<bool> _entities;
+        std::size_t _nextEntity = 0;
 
+        static constexpr entity to_entity(std::size_t id) noexcept { return entity(id); }
         public:
             entity_container() noexcept = default;
             entity_container(const entity_container &) = delete;
 
+            /**
+             * @brief Exception thrown when an entity is not found
+             */
             struct entity_not_found_error : public std::runtime_error {
                 explicit entity_not_found_error(entity to) noexcept
                     : std::runtime_error(std::format("Entity #{} does not exist", static_cast<std::size_t>(to)))
                 {};
             };
 
+            /**
+             * @brief Create a new entity in the @ref entity_container using the next available identifier
+             *
+             * @return entity The new entity
+             */
             constexpr entity create_entity() noexcept
             {
                 auto nextEntity = std::find(_entities.begin(), _entities.end(), false);
@@ -62,6 +83,12 @@ export namespace ecs {
                 return std::distance(_entities.begin(), nextEntity);
             }
 
+            /**
+             * @brief Get the @ref entity associated with the given identifier
+             *
+             * @param id The identifier of the entity
+             * @return std::optional<entity> The entity if it exists, otherwise std::nullopt
+             */
             constexpr std::optional<entity> get_entity(std::size_t id) const noexcept
             {
                 if (id >= _entities.size() || !_entities.at(id))
@@ -69,6 +96,15 @@ export namespace ecs {
                 return entity(id);
             }
 
+            /**
+             * @brief Add a component to an @ref entity
+             *
+             * @tparam Component The type of the component
+             * @param to The entity to add the component to
+             * @param component The component to add
+             * @return Component& The added component
+             * @throw entity_not_found_error If the entity does not exist
+             */
             template<typename Component>
             constexpr Component &add_component(entity to, Component &&component)
             {
@@ -78,6 +114,16 @@ export namespace ecs {
                     .try_emplace(typeid(Component), std::forward<Component>(component)).first->second);
             }
 
+            /**
+             * @brief Emplace a component to an @ref entity
+             *
+             * @tparam Component The type of the component
+             * @tparam Args The types of the arguments to forward to the component constructor
+             * @param to The entity to add the component to
+             * @param args The arguments to forward to the component constructor
+             * @return Component& The added component
+             * @throw entity_not_found_error If the entity does not exist
+             */
             template<typename Component, typename... Args>
             constexpr Component &emplace_component(entity to, Args &&...args)
             {
@@ -88,6 +134,14 @@ export namespace ecs {
                     .try_emplace(typeid(Component), Component(std::forward<Args>(args)...)).first->second);
             }
 
+            /**
+             * @brief Get a specific component from an @ref entity
+             *
+             * @remarks If the entity does not exist, @ref std::nullopt is returned
+             * @tparam Component The type of the component to obtain
+             * @param from The entity to get the component from
+             * @return std::optional<std::reference_wrapper<Component>> A reference to the component if it exists on the @ref entity, otherwise @ref std::nullopt
+             */
             template<typename Component>
             constexpr std::optional<std::reference_wrapper<Component>> get_entity_component(entity from) noexcept
             {
@@ -99,6 +153,14 @@ export namespace ecs {
                     : std::nullopt;
             }
 
+            /**
+             * @brief Get a specific component from an @ref entity
+             *
+             * @remarks If the entity does not exist, @ref std::nullopt is returned
+             * @tparam Component The type of the component to obtain
+             * @param from The entity to get the component from
+             * @return std::optional<std::reference_wrapper<const Component>> A const-reference to the component if it exists on the @ref entity, otherwise @ref std::nullopt
+             */
             template<typename Component>
             constexpr std::optional<std::reference_wrapper<const Component>> get_entity_component(entity from) const noexcept
             {
@@ -112,6 +174,13 @@ export namespace ecs {
                     : std::nullopt;
             }
 
+            /**
+             * @brief Remove a specific component from an @ref entity
+             *
+             * @tparam Component The type of the component to remove
+             * @param from The entity to remove the component from
+             * @return bool @ref true if the component was removed, otherwise @ref false
+             */
             template<typename Component>
             constexpr bool remove_component(entity from) noexcept
             {
@@ -120,51 +189,114 @@ export namespace ecs {
                 return _components[from].erase(typeid(Component));
             }
 
-            constexpr bool erase_entity(entity to) noexcept
+            /**
+             * @brief Erase an @ref entity from the @ref entity_container and destroy all its associated components
+             *
+             * @param e The entity to erase
+             * @return bool @ref true if the entity was erased, otherwise @ref false
+             * @remarks The internal identifier of the entity is made available for new entities
+             */
+            constexpr bool erase_entity(entity e) noexcept
             {
-                _entities.at(to) = false;
-                return _components.erase(to);
+                _entities.at(e) = false;
+                return _components.erase(e);
             }
 
+            /**
+             * @brief Get a view of all the entities in the @ref entity_container
+             *
+             * @return decltype(auto) A view of all the entities
+             */
             constexpr auto get_entities() const noexcept
             {
                 return std::ranges::to<std::vector<entity>>(_components | std::views::keys | std::views::transform(to_entity));
             }
-
-        private:
-            static constexpr entity to_entity(std::size_t id) noexcept { return entity(id); }
     };
 
     class system;
 
+    /**
+     * @brief @ref entity_container with systems logic
+     */
     class registry : public entity_container {
         private:
             std::forward_list<system> _systems;
 
         public:
+            /**
+             * @brief Register a new system to run on all entities
+             *
+             * @tparam Args The types of the components the system requires
+             * @param f The invocable object to execute by passing the components
+             * @return constexpr const system& The registered system
+             */
             template<typename... Args>
             constexpr const system &register_system(auto &&f) noexcept;
 
+            /**
+             * @brief Remove a system from the registry
+             *
+             * @param system The system to remove
+             * @return bool @ref true if the system was removed, otherwise @ref false
+             */
             inline bool remove_system(const system &system) noexcept
             {
                 return _systems.remove_if([&system](const auto &s){ return std::addressof(s) == std::addressof(system); });
             }
 
+            /**
+             * @brief Run all systems on all entities
+             */
             constexpr void run_systems() noexcept;
     };
 
+    /**
+     * @brief Opaque type representing code to be run on all entities
+     */
     class system {
+        /**
+         * @brief Create a new system that runs on entities with the specified components
+         *
+         * @tparam Args The types of the components the system requires
+         * @param f The invocable object to execute by passing the components
+         */
         template<typename... Args, std::invocable<std::add_lvalue_reference_t<Args>...> Function>
         constexpr system(Function &&f, std::typeset_t<Args...>) noexcept;
+        /**
+         * @brief Create a new system that runs on entities with a reference to the @ref entity_container and the specified components
+         *
+         * @tparam Args The types of the components the system requires
+         * @param f The invocable object to execute by passing the @ref entity_container and the components
+         */
         template<typename... Args, std::invocable<entity_container &, std::add_lvalue_reference_t<Args>...> Function>
         constexpr system(Function &&f, std::typeset_t<Args...>) noexcept;
+        /**
+         * @brief Create a new system that runs on entities with their @ref entity object and the specified components
+         *
+         * @tparam Args The types of the components the system requires
+         * @param f The invocable object to execute by passing the entity's @ref entity object and the components
+         */
         template<typename... Args, std::invocable<entity, std::add_lvalue_reference_t<Args>...> Function>
         constexpr system(Function &&f, std::typeset_t<Args...>) noexcept;
+        /**
+         * @brief Create a new system that runs on entities with their @ref entity object, a reference to the @ref entity_container
+           and the specified components
+         *
+         * @tparam Args The types of the components the system requires
+         * @param f The invocable object to execute by passing the entity's @ref entity object, the @ref entity_container and the components
+         */
         template<typename... Args, std::invocable<entity, entity_container &, std::add_lvalue_reference_t<Args>...> Function>
         constexpr system(Function &&f, std::typeset_t<Args...>) noexcept;
 
-        system(const system &) = delete;
-
+        /**
+         * @brief Invoke the system's code on the entity if it has the required components
+         *
+         * @tparam Function The type of the invocable object
+         * @tparam Args The types of the parameters the system requires
+         * @param f The invocable object to execute
+         * @param on The entity to run the system on
+         * @param ec The @ref entity_container to query the components from
+         */
         template<typename Function, typename... Args>
         static constexpr void invoke(Function &&f, entity on, entity_container &ec, std::typeset_t<Args...>) noexcept;
 
@@ -172,8 +304,15 @@ export namespace ecs {
         friend constexpr const system &registry::register_system(auto &&f) noexcept;
 
         public:
+            system(const system &) = delete;
             system(system &&) noexcept = default;
 
+            /**
+             * @brief Dynamically-constructed function to run the system on an entity
+             *
+             * @param ec The @ref entity_container to query the components from
+             * @param e The entity to run the system on
+             */
             std::function<void(entity_container &, entity)> update;
     };
 
