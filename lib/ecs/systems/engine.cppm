@@ -15,6 +15,8 @@ export namespace ecs::systems::engine {
     constexpr void control(components::engine::velocity &d, const components::engine::controllable &c) noexcept
     {
         if (c.enabled) {
+            d.x = 0;
+            d.y = 0;
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
                 d.x -= c.speed;
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
