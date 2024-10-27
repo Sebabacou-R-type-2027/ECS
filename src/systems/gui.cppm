@@ -15,50 +15,32 @@ export namespace ecs::systems::gui {
     {
         // components::gui::asset_manager &asset_manager = *ec.get_entity_component<components::gui::asset_manager>(drawable.asset_manager);
         for (auto &pair : drawable.elements) {
-            if (auto *sprite = dynamic_cast<sf::Sprite *>(pair.second.element.get()); sprite) {
+            if (auto *sprite = dynamic_cast<sf::Sprite *>(pair.second->element.get()); sprite) {
                 sprite->setPosition(position.x, position.y);
                 // sprite->setTexture(asset_manager.get_texture(pair.second.asset_key.value()));
-            } else if (auto *text = dynamic_cast<sf::Text *>(pair.second.element.get()); text) {
+            } else if (auto *text = dynamic_cast<sf::Text *>(pair.second->element.get()); text) {
                 text->setPosition(position.x, position.y);
                 // text->setFont(asset_manager.get_font(pair.second.asset_key.value()));
-            } else if (auto *shape = dynamic_cast<sf::Shape *>(pair.second.element.get()); shape)
+            } else if (auto *shape = dynamic_cast<sf::Shape *>(pair.second->element.get()); shape)
                 shape->setPosition(position.x, position.y);
-        }
-    }
-
-    void reposition_animations(entity_container &ec, components::gui::animations &animations, const components::position &position) noexcept
-    {
-        for (auto &pair : animations.elements)
-            pair.second.sprite.setPosition(position.x, position.y);
-    }
-
-    void animate(entity_container &ec, components::gui::animations &animation) noexcept
-    {
-        for (auto &pair : animation.elements) {
-            auto entity = ec.get_entity(pair.first);
-            auto window = entity.and_then([&ec](auto e){
-                return ec.get_entity_component<components::gui::window>(e);
-            });
-            auto clock = entity.and_then([&ec](auto e){
-                return ec.get_entity_component<components::gui::animation_clock>(e);
-            });
-            if (clock) {
-                pair.second.update(clock->get().delta);
-            }
-            if (window) {
-                window->get().window.draw(pair.second.sprite);
-            }
         }
     }
 
     void draw(entity_container &ec, const components::gui::drawable &drawable) noexcept
     {
         for (const auto &pair : drawable.elements) {
-            auto component = ec.get_entity(pair.first).and_then([&ec](auto e){
+            auto entity = ec.get_entity(pair.first);
+            auto window = entity.and_then([&ec](auto e){
                 return ec.get_entity_component<components::gui::window>(e);
             });
-            if (component)
-                component->get().window.draw(*pair.second.element);
+            auto clock = entity.and_then([&ec](auto e){
+                return ec.get_entity_component<const components::gui::animation_clock>(e);
+            });
+            auto *animation = dynamic_cast<components::gui::animation *>(pair.second.get());
+            if (animation && clock)
+                animation->update(clock->get().delta);
+            if (window)
+                window->get().window.draw(*pair.second->element);
         }
     }
 

@@ -20,7 +20,7 @@ using namespace std::chrono_literals;
 
 export namespace ecs::components::gui {
     struct window {
-        sf::RenderWindow &window;
+        sf::RenderWindow window;
     };
 
     class asset_manager {
@@ -66,26 +66,30 @@ export namespace ecs::components::gui {
     };
 
     struct display_element {
-        std::shared_ptr<sf::Drawable> element;
+        virtual ~display_element() noexcept = default;
+
+        constexpr display_element(std::unique_ptr<sf::Drawable> drawable, std::optional<std::string_view> key = std::nullopt) noexcept
+            : element(std::move(drawable)), asset_key(key.transform([](auto &&id){ return std::string(id); }))
+        {}
+
+        std::unique_ptr<sf::Drawable> element;
         std::optional<std::string> asset_key;
     };
 
     struct drawable {
-        using elements_container = std::unordered_multimap<std::size_t, display_element>;
+        using elements_container = std::unordered_multimap<std::size_t, std::unique_ptr<display_element>>;
         entity asset_manager;
         elements_container elements;
     };
 
-    class animation {
+    class animation : public display_element {
         public:
             const std::size_t frame_lines, frame_columns;
-            std::optional<std::string> asset_key;
 
         private:
             const std::size_t _image_width, _image_height;
 
         public:
-            sf::Sprite sprite;
             std::chrono::steady_clock::duration frame_length = 10ms;
 
         private:
@@ -94,9 +98,10 @@ export namespace ecs::components::gui {
 
         public:
             animation(const sf::Texture &texture, std::size_t lines, std::size_t columns, std::optional<std::string_view> texture_id = std::nullopt) noexcept
-                : frame_lines(lines), frame_columns(columns), asset_key(texture_id),
-                _image_width(texture.getSize().x / columns), _image_height(texture.getSize().y / lines),
-                sprite(texture, sf::IntRect(0, 0, _image_width, _image_height))
+                : display_element(std::make_unique<sf::Sprite>(texture, sf::IntRect(0, 0,
+                    texture.getSize().x / columns, texture.getSize().y / lines)), texture_id),
+                frame_lines(lines), frame_columns(columns),
+                _image_width(texture.getSize().x / columns), _image_height(texture.getSize().y / lines)
             {}
 
             void update(std::chrono::steady_clock::duration delta) noexcept
@@ -106,7 +111,7 @@ export namespace ecs::components::gui {
                     return;
                 _frame_duration %= frame_length;
 
-                sprite.setTextureRect(
+                static_cast<sf::Sprite &>(*element).setTextureRect(
                     sf::IntRect(_image_width * _frame_column_index,
                         _image_height * _frame_line_index,
                         _image_width, _image_height));
@@ -118,11 +123,5 @@ export namespace ecs::components::gui {
                 if (++_frame_line_index == frame_lines)
                     _frame_line_index = 0;
             }
-    };
-
-    struct animations {
-        using elements_container = std::unordered_multimap<std::size_t, animation>;
-        entity asset_manager;
-        elements_container elements;
     };
 }
