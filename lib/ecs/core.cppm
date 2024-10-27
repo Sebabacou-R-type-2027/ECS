@@ -41,8 +41,8 @@ export namespace ecs {
             std::vector<bool> _entities;
             std::size_t _nextEntity = 0;
 
-
         public:
+            entity_container() noexcept = default;
             entity_container(const entity_container &) = delete;
 
             struct entity_not_found_error : public std::runtime_error {
