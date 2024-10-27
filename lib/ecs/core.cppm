@@ -46,7 +46,7 @@ export namespace ecs {
      * @brief Class managing entities and their components
      */
     class entity_container {
-        using component_container = std::unordered_map<std::type_index, std::any>;
+        using component_container = std::unordered_map<std::type_index, std::unique_any>;
         using entity_components = std::unordered_map<std::size_t, component_container>;
 
         entity_components _components;
@@ -131,7 +131,7 @@ export namespace ecs {
                     throw entity_not_found_error(to);
                 _components[to].erase(typeid(Component));
                 return std::any_cast<Component &>(_components.at(to)
-                    .try_emplace(typeid(Component), Component(std::forward<Args>(args)...)).first->second);
+                    .try_emplace(typeid(Component), std::in_place_type<Component>, std::forward<Args>(args)...).first->second);
             }
 
             /**
