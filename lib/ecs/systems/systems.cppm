@@ -19,12 +19,14 @@ export namespace ecs::systems {
     template<typename... Components>
     class logger {
         public:
-            std::chrono::steady_clock::duration period = 1s;
-            std::ostream &out = std::cout;
+            using duration = std::chrono::steady_clock::duration;
+            duration period;
+            std::ostream &os;
 
         protected:
-            constexpr logger(registry &registry) noexcept
-                : _next(std::chrono::steady_clock::now()), _registry(registry),
+            constexpr logger(registry &registry, duration period = 1s, std::ostream &os = std::cout) noexcept
+                : period(period), os(os), _registry(registry),
+                _next(std::chrono::steady_clock::now()),
                 _system(std::bind_front(&logger<Components...>::run, this)),
                 _system_handle(_registry.register_system<Components...>(_system))
             {}
@@ -37,8 +39,8 @@ export namespace ecs::systems {
             virtual void log(entity e, Components &...) const noexcept = 0;
 
         private:
-            std::chrono::steady_clock::time_point _next;
             registry &_registry;
+            std::chrono::steady_clock::time_point _next;
             std::function<void(entity, Components &...)> _system;
             const system &_system_handle;
 
@@ -52,16 +54,13 @@ export namespace ecs::systems {
             }
     };
 
-    class position_logger : public logger<const components::position> {
-        public:
-            constexpr position_logger(registry &registry) noexcept
-                : logger<const components::position>(registry)
-            {}
+    struct position_logger : public logger<const components::position> {
+        using logger<const components::position>::logger;
 
         protected:
             void log(entity e, const components::position &pos) const noexcept final
             {
-                out << "Entity #" << static_cast<std::size_t>(e) << ": Position: (" << pos.x << ", " << pos.y << ")" << std::endl;
+                os << "Entity #" << static_cast<std::size_t>(e) << ": Position: (" << pos.x << ", " << pos.y << ")" << std::endl;
             }
     };
 }
