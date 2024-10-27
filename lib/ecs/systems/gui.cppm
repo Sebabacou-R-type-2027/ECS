@@ -11,7 +11,7 @@ import std;
 #endif
 
 export namespace ecs::systems::gui {
-    void reposition(entity_container &ec, components::gui::drawable &drawable, const components::position &position, components::gui::animations &animations) noexcept
+    void reposition(entity_container &ec, components::gui::drawable &drawable, const components::position &position) noexcept
     {
         // components::gui::asset_manager &asset_manager = *ec.get_entity_component<components::gui::asset_manager>(drawable.asset_manager);
         for (auto &pair : drawable.elements) {
@@ -24,6 +24,10 @@ export namespace ecs::systems::gui {
             } else if (auto *shape = dynamic_cast<sf::Shape *>(pair.second.element.get()); shape)
                 shape->setPosition(position.x, position.y);
         }
+    }
+
+    void reposition_animations(entity_container &ec, components::gui::animations &animations, const components::position &position) noexcept
+    {
         for (auto &pair : animations.elements)
             pair.second.sprite.setPosition(position.x, position.y);
     }

@@ -16,6 +16,7 @@ import std;
 import utils;
 
 using namespace std::string_literals;
+using namespace std::chrono_literals;
 
 export namespace ecs::components::gui {
     struct window {
@@ -58,58 +59,12 @@ export namespace ecs::components::gui {
         std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
         std::chrono::steady_clock::duration delta;
 
-
-        void update() noexcept {
+        inline void update() noexcept
+        {
             delta = std::chrono::steady_clock::now() - start;
         }
     };
-    class animation {
-        private:
-            int ImageSize_x;
-            int ImageSize_y;
-        public:
-            sf::Sprite sprite;
-            std::optional<std::string> assetKey;
-            int imageCount_x;
-            int imageCount_y;
-            int currentImage_x;
-            int currentImage_y;
-            std::chrono::steady_clock::duration switchTime;
-            std::chrono::steady_clock::duration totalTime;
 
-        animation(components::gui::asset_manager &assets, const std::string &textureKey, int imageCountX, int imageCountY, std::chrono::steady_clock::duration switchTime)
-            : assetKey(textureKey), imageCount_x(imageCountX), imageCount_y(imageCountY), currentImage_x(0), currentImage_y(0), switchTime(switchTime) {
-
-            const sf::Texture &texture = assets.get_texture(textureKey);
-            ImageSize_x = texture.getSize().x / imageCount_x;
-            ImageSize_y = texture.getSize().y / imageCount_y;
-            sprite.setTexture(texture);
-        }
-
-        void update(std::chrono::steady_clock::duration delta) {
-
-            sprite.setTextureRect(sf::IntRect(currentImage_x * ImageSize_x,
-                                            currentImage_y * ImageSize_y,
-                                            ImageSize_x,
-                                            ImageSize_y));
-            totalTime += delta;
-
-            if (totalTime >= switchTime) {
-                totalTime -= switchTime;
-
-                currentImage_x++;
-                if (currentImage_x >= imageCount_x) {
-                    currentImage_x = 0;
-                    currentImage_y++;
-
-                    if (currentImage_y >= imageCount_y) {
-                        currentImage_y = 0;
-                    }
-                }
-
-            }
-        }
-    };
     struct display_element {
         std::shared_ptr<sf::Drawable> element;
         std::optional<std::string> asset_key;
@@ -119,6 +74,50 @@ export namespace ecs::components::gui {
         using elements_container = std::unordered_multimap<std::size_t, display_element>;
         entity asset_manager;
         elements_container elements;
+    };
+
+    class animation {
+        public:
+            const std::size_t frame_lines, frame_columns;
+            std::optional<std::string> asset_key;
+
+        private:
+            const std::size_t _image_width, _image_height;
+
+        public:
+            sf::Sprite sprite;
+            std::chrono::steady_clock::duration frame_length = 10ms;
+
+        private:
+            std::size_t _frame_line_index, _frame_column_index;
+            std::chrono::steady_clock::duration _frame_duration;
+
+        public:
+            animation(const sf::Texture &texture, std::size_t lines, std::size_t columns, std::optional<std::string_view> texture_id = std::nullopt) noexcept
+                : frame_lines(lines), frame_columns(columns), asset_key(texture_id),
+                _image_width(texture.getSize().x / columns), _image_height(texture.getSize().y / lines),
+                sprite(texture, sf::IntRect(0, 0, _image_width, _image_height))
+            {}
+
+            void update(std::chrono::steady_clock::duration delta) noexcept
+            {
+                _frame_duration += delta;
+                if (_frame_duration < frame_length)
+                    return;
+                _frame_duration %= frame_length;
+
+                sprite.setTextureRect(
+                    sf::IntRect(_image_width * _frame_column_index,
+                        _image_height * _frame_line_index,
+                        _image_width, _image_height));
+
+                if (++_frame_column_index < frame_columns)
+                    return;
+
+                _frame_column_index = 0;
+                if (++_frame_line_index == frame_lines)
+                    _frame_line_index = 0;
+            }
     };
 
     struct animations {
