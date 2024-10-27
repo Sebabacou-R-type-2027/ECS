@@ -126,9 +126,9 @@ export namespace ecs {
                 return _components.erase(to);
             }
 
-            constexpr decltype(auto) get_entities() const noexcept
+            constexpr auto get_entities() const noexcept
             {
-                return _components | std::views::keys | std::views::transform(to_entity);
+                return std::ranges::to<std::vector<entity>>(_components | std::views::keys | std::views::transform(to_entity));
             }
 
         private:
