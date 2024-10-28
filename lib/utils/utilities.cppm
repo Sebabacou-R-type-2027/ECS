@@ -13,34 +13,46 @@ import :types;
 import std;
 #endif
 
-struct type_holder : public std::abstract {
-    virtual ~type_holder() noexcept = default;
+namespace detail {
+    struct type_holder : public std::abstract {
+        virtual ~type_holder() noexcept = default;
 
-    virtual constexpr const std::type_info &type() const noexcept = 0;
-};
+        virtual constexpr const std::type_info &type() const noexcept = 0;
+    };
+
+    template <typename T>
+    struct is_in_place_type : std::false_type {};
+    template <typename T>
+    struct is_in_place_type<std::in_place_type_t<T>> : std::true_type {};
+
+    template <typename T>
+    constexpr bool is_in_place_type_v = is_in_place_type<std::remove_cvref_t<T>>::value;
+}
 
 export namespace std {
     class unique_any {
         template<typename T>
-        struct holder : public type_holder {
-            std::decay_t<T> value;
+        struct holder : public detail::type_holder {
+            T value;
 
             template<typename... Args>
+            requires std::is_constructible_v<std::decay_t<T>, Args &&...>
             constexpr holder(Args &&...args)
-            noexcept(std::is_nothrow_constructible_v<std::decay_t<T>, Args...>)
-                : value(std::forward<Args>(args)...)
+            noexcept(std::is_nothrow_constructible_v<T, Args &&...>)
+                : value{std::forward<Args>(args)...}
             {}
 
             template<typename U, typename... Args>
+            requires std::is_constructible_v<std::decay_t<T>, std::initializer_list<U> &, Args &&...>
             constexpr holder(std::initializer_list<U> il, Args &&...args)
-            noexcept(std::is_nothrow_constructible_v<std::decay_t<T>, std::initializer_list<U>, Args...>)
-                : value(il, std::forward<Args>(args)...)
+            noexcept(std::is_nothrow_constructible_v<T, std::initializer_list<U> &, Args &&...>)
+                : value{il, std::forward<Args>(args)...}
             {}
 
-            constexpr const std::type_info &type() const noexcept final { return typeid(std::decay_t<T>); }
+            constexpr const std::type_info &type() const noexcept final { return typeid(T); }
         };
 
-        std::unique_ptr<type_holder> content;
+        std::unique_ptr<detail::type_holder> content;
 
         template<typename T>
         friend constexpr T *any_cast(unique_any *operand) noexcept;
@@ -51,21 +63,22 @@ export namespace std {
             constexpr unique_any(const unique_any &other) noexcept = delete;
             constexpr unique_any(unique_any &&other) noexcept = default;
 
-            template<typename T>// requires (!std::is_same_v<unique_any, typename std::decay_t<T>>)
-            unique_any(T &&value)
-                : content(std::make_unique<holder<T>>(std::forward<T>(value)))
+            template<typename T>
+            requires (!std::is_same_v<unique_any, std::decay_t<T>> && !detail::is_in_place_type_v<std::remove_cvref_t<T>>)
+            constexpr unique_any(T &&value) noexcept(std::is_nothrow_constructible_v<holder<std::decay_t<T>>, T &&>)
+                : content(std::make_unique<holder<std::decay_t<T>>>(std::forward<T>(value)))
             {}
 
             template<typename T, typename... Args>
             explicit constexpr unique_any(std::in_place_type_t<T>, Args &&...args)
-            noexcept(std::is_nothrow_constructible_v<holder<T>, Args...>)
-                : content(std::make_unique<holder<T>>(std::forward<Args>(args)...))
+            noexcept(std::is_nothrow_constructible_v<holder<std::decay_t<T>>, Args &&...>)
+                : content(std::make_unique<holder<std::decay_t<T>>>(std::forward<Args>(args)...))
             {}
 
             template<typename T, typename U, typename... Args>
-            explicit constexpr unique_any(std::initializer_list<U> il, Args &&...args)
-            noexcept(std::is_nothrow_constructible_v<holder<T>, std::initializer_list<U>, Args...>)
-                : content(std::make_unique<holder<T>>(il, std::forward<Args>(args)...))
+            explicit constexpr unique_any(std::in_place_type_t<T>, std::initializer_list<U> il, Args &&...args)
+            noexcept(std::is_nothrow_constructible_v<holder<std::decay_t<T>>, std::initializer_list<U> &, Args &&...>)
+                : content(std::make_unique<holder<std::decay_t<T>>>(il, std::forward<Args>(args)...))
             {}
 
             ~unique_any() noexcept = default;
@@ -73,23 +86,27 @@ export namespace std {
             constexpr unique_any &operator=(const unique_any &other) noexcept = delete;
             constexpr unique_any &operator=(unique_any &&other) noexcept = default;
 
-            template<typename T>
-            constexpr unique_any &operator=(T &&value)
+            template<typename T> requires (!std::is_same_v<unique_any, std::decay_t<T>>)
+            constexpr unique_any &operator=(T &&value) noexcept
             {
                 unique_any(std::forward<T>(value)).swap(*this);
                 return *this;
             }
 
             template<typename T, typename... Args>
-            typename std::decay_t<T> &emplace(Args &&...args) {
-                content.swap(std::make_unique(holder<T>(std::forward<Args>(args)...)));
-                return static_cast<holder<T> &>(*content).value;
+            constexpr std::decay_t<T> &emplace(Args &&...args)
+            noexcept(std::is_nothrow_constructible_v<holder<std::decay_t<T>>, Args &&...>)
+            {
+                content.swap(std::make_unique(holder<std::decay_t<T>>(std::forward<Args>(args)...)));
+                return static_cast<holder<std::decay_t<T>> &>(*content).value;
             }
 
             template<typename T, typename U, typename... Args>
-            typename std::decay_t<T> &emplace(std::initializer_list<U> il, Args &&...args) {
-                content.swap(std::make_unique(holder<T>(il, std::forward<Args>(args)...)));
-                return static_cast<holder<T> &>(*content).value;
+            constexpr std::decay_t<T> &emplace(std::initializer_list<U> il, Args &&...args)
+            noexcept(std::is_nothrow_constructible_v<holder<std::decay_t<T>>, std::initializer_list<U> &, Args &&...>)
+            {
+                content.swap(std::make_unique(holder<std::decay_t<T>>(il, std::forward<Args>(args)...)));
+                return static_cast<holder<std::decay_t<T>> &>(*content).value;
             }
 
             constexpr void reset() noexcept { content.reset(); }
@@ -99,43 +116,65 @@ export namespace std {
             constexpr const std::type_info &type() const noexcept { return content ? content->type() : typeid(void); }
     };
 
-    inline void swap(unique_any &lhs, unique_any &rhs) noexcept { lhs.swap(rhs); }
+    constexpr void swap(unique_any &lhs, unique_any &rhs) noexcept { lhs.swap(rhs); }
 
     template<typename T>
     constexpr T *any_cast(unique_any *operand) noexcept
     {
+        static_assert(!std::is_void_v<T>);
         return operand && operand->type() == typeid(T)
-            ? std::addressof(static_cast<typename unique_any::holder<T> &>(*operand->content).value)
+            ? std::addressof(static_cast<unique_any::holder<std::decay_t<T>> &>(*operand->content).value)
             : nullptr;
     }
 
     template<typename T>
     constexpr const T *any_cast(const unique_any *operand) noexcept
     {
+        static_assert(!std::is_void_v<T>);
         return any_cast<T>(const_cast<unique_any *>(operand));
     }
 
     template<typename T>
     constexpr T any_cast(unique_any &operand)
     {
-        using V = typename std::remove_reference_t<T>;
-
-        V *result = any_cast<V>(std::addressof(operand));
-        if(!result)
+        using U = std::remove_cvref_t<T>;
+        static_assert(std::is_constructible_v<T, U &>);
+        if(typeid(T) != operand.type())
             throw std::bad_any_cast();
-
-        return static_cast<typename std::conditional_t<std::is_reference_v<T>, T, T&>>(*result);
+        return static_cast<T>(*std::any_cast<U>(std::addressof(operand)));
     }
 
     template<typename T>
-    constexpr T any_cast(const unique_any &operand) noexcept(std::is_nothrow_copy_constructible_v<T>)
+    constexpr T any_cast(const unique_any &operand)
     {
-        return any_cast<const T &>(const_cast<unique_any &>(operand));
+        using U = std::remove_cvref_t<T>;
+        static_assert(std::is_constructible_v<T, const U &>);
+        if(typeid(T) != operand.type())
+            throw std::bad_any_cast();
+        return static_cast<T>(*std::any_cast<U>(std::addressof(operand)));
     }
 
-    template<typename T> requires std::is_rvalue_reference_v<T &&> || std::is_const_v<typename std::remove_reference_t<T>>
-    constexpr T any_cast(unique_any&& operand) noexcept(std::is_nothrow_move_constructible_v<T>)
+    template<typename T>
+    constexpr T any_cast(unique_any&& operand)
     {
-        return std::move(any_cast<T &>(operand));
+        using U = std::remove_cvref_t<T>;
+        static_assert(std::is_constructible_v<T, U>);
+        if(typeid(T) != operand.type())
+            throw std::bad_any_cast();
+        return static_cast<T>(std::move(*std::any_cast<U>(std::addressof(operand))));
+    }
+
+    template<typename T, typename... Args>
+    constexpr unique_any make_any(Args &&...args)
+    noexcept(std::is_nothrow_constructible_v<unique_any, std::in_place_type_t<T>, Args...>)
+    {
+        return unique_any(std::in_place_type<T>, std::forward<Args>(args)...);
+    }
+
+    template<typename T, typename U, typename... Args>
+    constexpr unique_any make_any(std::initializer_list<U> il, Args &&...args)
+    noexcept(std::is_nothrow_constructible_v<unique_any, std::in_place_type_t<T>, std::initializer_list<U>, Args...>)
+    {
+        return unique_any(std::in_place_type<T>, il, std::forward<Args>(args)...);
     }
 }

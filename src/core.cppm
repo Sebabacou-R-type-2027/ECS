@@ -2,7 +2,6 @@
 module;
 
 #include <algorithm>
-#include <any>
 #include <format>
 #include <forward_list>
 #include <functional>
