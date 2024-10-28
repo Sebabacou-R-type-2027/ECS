@@ -90,18 +90,21 @@ export namespace ecs::components::gui {
             const std::size_t _image_width, _image_height;
 
         public:
-            std::chrono::steady_clock::duration frame_length = 10ms;
+            std::chrono::steady_clock::duration frame_length;
 
         private:
-            std::size_t _frame_line_index, _frame_column_index;
-            std::chrono::steady_clock::duration _frame_duration;
+            sf::Sprite &_sprite;
+            std::size_t _frame_line_index{}, _frame_column_index{};
+            std::chrono::steady_clock::duration _frame_duration{};
 
         public:
-            animation(const sf::Texture &texture, std::size_t lines, std::size_t columns, std::optional<std::string_view> texture_id = std::nullopt) noexcept
+            animation(const sf::Texture &texture, std::size_t lines, std::size_t columns,
+                std::chrono::steady_clock::duration length = 10ms, std::optional<std::string_view> texture_id = std::nullopt) noexcept
                 : display_element(std::make_unique<sf::Sprite>(texture, sf::IntRect(0, 0,
                     texture.getSize().x / columns, texture.getSize().y / lines)), texture_id),
                 frame_lines(lines), frame_columns(columns),
-                _image_width(texture.getSize().x / columns), _image_height(texture.getSize().y / lines)
+                _image_width(texture.getSize().x / columns), _image_height(texture.getSize().y / lines),
+                frame_length(length), _sprite(static_cast<sf::Sprite &>(*element))
             {}
 
             void update(std::chrono::steady_clock::duration delta) noexcept
@@ -111,10 +114,9 @@ export namespace ecs::components::gui {
                     return;
                 _frame_duration %= frame_length;
 
-                static_cast<sf::Sprite &>(*element).setTextureRect(
-                    sf::IntRect(_image_width * _frame_column_index,
-                        _image_height * _frame_line_index,
-                        _image_width, _image_height));
+                _sprite.setTextureRect(sf::IntRect(_image_width * _frame_column_index,
+                    _image_height * _frame_line_index,
+                    _image_width, _image_height));
 
                 if (++_frame_column_index < frame_columns)
                     return;

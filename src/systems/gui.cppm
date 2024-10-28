@@ -44,13 +44,11 @@ export namespace ecs::systems::gui {
         }
     }
 
-    void clear(components::gui::window &component) noexcept
-    {
-        component.window->clear();
-    }
+    inline void update_clock(components::gui::animation_clock &clock) noexcept { clock.update(); }
 
-    void display(components::gui::window &component) noexcept
-    {
-        component.window->display();
-    }
+    inline void reset_clock(components::gui::animation_clock &clock) noexcept { clock.start = std::chrono::steady_clock::now(); }
+
+    inline void clear(components::gui::window &component) noexcept { component.window->clear(); }
+
+    inline void display(components::gui::window &component) noexcept { component.window->display(); }
 }
