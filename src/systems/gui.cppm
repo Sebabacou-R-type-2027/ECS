@@ -40,17 +40,17 @@ export namespace ecs::systems::gui {
             if (animation && clock)
                 animation->update(clock->get().delta);
             if (window)
-                window->get().window.draw(*pair.second->element);
+                window->get().window->draw(*pair.second->element);
         }
     }
 
     void clear(components::gui::window &component) noexcept
     {
-        component.window.clear();
+        component.window->clear();
     }
 
     void display(components::gui::window &component) noexcept
     {
-        component.window.display();
+        component.window->display();
     }
 }

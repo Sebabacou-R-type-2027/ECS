@@ -20,7 +20,7 @@ using namespace std::chrono_literals;
 
 export namespace ecs::components::gui {
     struct window {
-        sf::RenderWindow window;
+        std::unique_ptr<sf::RenderWindow> window;
     };
 
     class asset_manager {
