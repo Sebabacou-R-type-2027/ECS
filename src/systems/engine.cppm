@@ -2,8 +2,13 @@ module;
 
 #include <SFML/Window/Keyboard.hpp>
 export module ecs:systems.engine;
+import :core;
 import :components;
 import :components.engine;
+
+#if __cpp_lib_modules >= 202207L
+import std;
+#endif
 
 export namespace ecs::systems::engine {
     constexpr void movement(components::position &pos, const components::engine::velocity &d) noexcept
@@ -24,5 +29,25 @@ export namespace ecs::systems::engine {
             pos.y -= c.speed;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
             pos.y += c.speed;
+    }
+
+    constexpr void collision(entity e, entity_container &ec, const components::engine::hitbox &hit) noexcept
+    {
+        std::vector<ecs::entity> entities_to_erase;
+
+        std::ranges::for_each(ec.get_entities(), [e, &ec, &hit, &entities_to_erase](auto entity) {
+            auto hitbox = ec.get_entity_component<components::engine::hitbox>(entity);
+            if (hitbox.has_value() && hitbox->get().left < hit.left + hit.width &&
+                hitbox->get().left + hitbox->get().width > hit.left &&
+                hitbox->get().top < hit.top + hit.height &&
+                hitbox->get().top + hitbox->get().height > hit.top && entity != e) {
+                entities_to_erase.push_back(entity);
+                entities_to_erase.push_back(e);
+            }
+        });
+
+        for (auto e : entities_to_erase) {
+            ec.erase_entity(e);
+        }
     }
 }
