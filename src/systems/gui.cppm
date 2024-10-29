@@ -11,17 +11,18 @@ import std;
 #endif
 
 export namespace ecs::systems::gui {
-    void reposition(entity_container &ec, components::gui::drawable &drawable, const components::position &position) noexcept
+    void reposition(components::gui::drawable &drawable, const components::position &position) noexcept
     {
-        // components::gui::asset_manager &asset_manager = *ec.get_entity_component<components::gui::asset_manager>(drawable.asset_manager);
         for (auto &pair : drawable.elements) {
-            if (auto *sprite = dynamic_cast<sf::Sprite *>(pair.second->element.get()); sprite) {
+            if (pair.second->reposition) {
+                (*pair.second->reposition)(*pair.second, position);
+                continue;
+            }
+            if (auto *sprite = dynamic_cast<sf::Sprite *>(pair.second->element.get()))
                 sprite->setPosition(position.x, position.y);
-                // sprite->setTexture(asset_manager.get_texture(pair.second.asset_key.value()));
-            } else if (auto *text = dynamic_cast<sf::Text *>(pair.second->element.get()); text) {
+            else if (auto *text = dynamic_cast<sf::Text *>(pair.second->element.get()))
                 text->setPosition(position.x, position.y);
-                // text->setFont(asset_manager.get_font(pair.second.asset_key.value()));
-            } else if (auto *shape = dynamic_cast<sf::Shape *>(pair.second->element.get()); shape)
+            else if (auto *shape = dynamic_cast<sf::Shape *>(pair.second->element.get()))
                 shape->setPosition(position.x, position.y);
         }
     }
@@ -29,6 +30,8 @@ export namespace ecs::systems::gui {
     void draw(entity_container &ec, const components::gui::drawable &drawable) noexcept
     {
         for (const auto &pair : drawable.elements) {
+            if (!pair.second->visible)
+                continue;
             auto entity = ec.get_entity(pair.first);
             auto window = entity.and_then([&ec](auto e){
                 return ec.get_entity_component<components::gui::window>(e);

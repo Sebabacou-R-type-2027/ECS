@@ -74,6 +74,22 @@ export namespace ecs::components::gui {
 
         std::unique_ptr<sf::Drawable> element;
         std::optional<std::string> asset_key;
+        std::optional<std::function<void(display_element &element, const position &position)>> reposition;
+        bool visible = true;
+
+        static inline void reposition_center(display_element &display, const position &position) noexcept
+        {
+            if (auto *sprite = dynamic_cast<sf::Sprite *>(display.element.get())) {
+                const auto &bounds = sprite->getLocalBounds();
+                sprite->setPosition(position.x + bounds.width / 2, position.y + bounds.height / 2);
+            } else if (auto *text = dynamic_cast<sf::Text *>(display.element.get())) {
+                const auto &bounds = text->getLocalBounds();
+                text->setPosition(position.x + bounds.width / 2, position.y + bounds.height / 2);
+            } else if (auto *shape = dynamic_cast<sf::Shape *>(display.element.get())) {
+                const auto &bounds = shape->getLocalBounds();
+                shape->setPosition(position.x + bounds.width / 2, position.y + bounds.height / 2);
+            }
+        }
     };
 
     struct drawable {
