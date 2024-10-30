@@ -36,12 +36,4 @@ export namespace ecs::components {
         constexpr lifestate(bool a) noexcept : alive{a} {}
         bool alive;
     };
-
-    constexpr clock::~clock() noexcept = default;
-
-    struct lifestate {
-        constexpr lifestate() noexcept : alive{true} {}
-        constexpr lifestate(bool a) noexcept : alive{a} {}
-        bool alive;
-    };
 }
