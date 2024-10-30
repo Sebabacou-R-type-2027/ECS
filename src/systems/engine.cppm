@@ -6,6 +6,8 @@ import :core;
 import :components;
 import :components.gui;
 import :components.engine;
+import :abstractions;
+import :core;
 
 #if __cpp_lib_modules >= 202207L
 import std;
@@ -33,50 +35,17 @@ export namespace ecs::systems::engine
             pos.y += c.speed;
     }
 
-    constexpr void collision(entity e, entity_container &ec, const components::engine::hitbox &hit) noexcept
+    constexpr void collision(entity e, entity_container &ec, const components::engine::hitbox &box) noexcept
     {
-        std::ranges::for_each(ec.get_entities(), [e, &ec, &hit](auto entity) {
-            if (entity == e) return;
-
-            auto hitbox = ec.get_entity_component<components::engine::hitbox>(entity);
-            auto lifestate = ec.get_entity_component<components::lifestate>(entity);
-            auto life = ec.get_entity_component<components::lifestate>(e);
-
-            if (hitbox.has_value() && 
-                hitbox->get().left < hit.left + hit.width &&
-                hitbox->get().left + hitbox->get().width > hit.left &&
-                hitbox->get().top < hit.top + hit.height &&
-                hitbox->get().height + hitbox->get().top > hit.top) 
-            {   
-                ec.erase_entity(e);
-                ec.erase_entity(entity);
-
-                std::cout << "Collision between " << e << " and " << entity << std::endl;
-                // Récupérer et afficher les `texture_id`
-                auto drawable_e = ec.get_entity_component<ecs::components::gui::drawable>(e);
-                auto drawable_entity = ec.get_entity_component<ecs::components::gui::drawable>(entity);
-
-                if (drawable_e.has_value()) {
-                    for (const auto &element_pair : drawable_e->get().elements) {
-                        if (auto &display_elem = element_pair.second) {
-                            if (display_elem->asset_key.has_value()) {
-                                std::cout << "Entity " << e << " texture_id: " << *display_elem->asset_key << std::endl;
-                            }
-                        }
-                    }
-                }
-
-                if (drawable_entity.has_value()) {
-                    for (const auto &element_pair : drawable_entity->get().elements) {
-                        if (auto &display_elem = element_pair.second) {
-                            if (display_elem->asset_key.has_value()) {
-                                std::cout << "Entity " << entity << " texture_id: " << *display_elem->asset_key << std::endl;
-                            }
-                        }
-                    }
-                }
+        std::ranges::for_each(ec.get_entities(), [&](entity other) {
+            if (e == other)
+                return;
+            auto other_box = ec.get_entity_component<components::engine::hitbox>(other);
+            if (other_box.has_value() && box.box.intersects(other_box->get().box)) {
+                std::cout << "Collision detected" << std::endl;
+                other_box->get().is_trigger = true;
+                box.is_trigger = true;
             }
         });
     }
-
 }

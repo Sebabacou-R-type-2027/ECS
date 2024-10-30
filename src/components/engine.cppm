@@ -1,6 +1,6 @@
 export module ecs:components.engine;
 import :components;
-import :core;
+import :abstractions;
 
 export namespace ecs::components::engine {
     struct velocity : public position {
@@ -13,13 +13,7 @@ export namespace ecs::components::engine {
     };
 
     struct hitbox {
-        float width;
-        float height;
-        float top;
-        float left;
-
-        hitbox(float width, float height, float top, float left)
-            : width(width), height(height), top(top), left(left)
-        {}
+        abstractions::rectangle<float> box;
+        bool is_trigger = false;
     };
 }
