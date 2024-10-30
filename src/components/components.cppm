@@ -7,4 +7,10 @@ export namespace ecs::components {
 
         float x, y;
     };
+
+    struct lifestate {
+        constexpr lifestate() noexcept : alive{true} {}
+        constexpr lifestate(bool a) noexcept : alive{a} {}
+        bool alive;
+    };
 }
