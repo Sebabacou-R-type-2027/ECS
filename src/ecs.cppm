@@ -1,5 +1,7 @@
 export module ecs;
 export import :core;
+export import :abstractions;
+export import :abstractions.gui;
 export import :components;
 export import :components.engine;
 export import :components.gui;

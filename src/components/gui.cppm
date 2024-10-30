@@ -1,13 +1,13 @@
+#if __cpp_lib_modules < 202207L
 module;
 
-#if __cpp_lib_modules < 202207L
 #include <chrono>
 #include <memory>
 #include <unordered_map>
 #endif
-#include <SFML/Graphics.hpp>
 export module ecs:components.gui;
 import :core;
+import :abstractions.gui;
 import :components;
 
 #if __cpp_lib_modules >= 202207L
@@ -19,86 +19,53 @@ using namespace std::string_literals;
 using namespace std::chrono_literals;
 
 export namespace ecs::components::gui {
-    struct window {
-        std::unique_ptr<sf::RenderWindow> window;
+    struct display {
+        std::unique_ptr<abstractions::gui::window> window;
     };
 
     class asset_manager {
-        std::unordered_string_map<sf::Texture> _textures;
-        std::unordered_string_map<sf::Font> _fonts;
+        std::unique_ptr<abstractions::gui::asset_loader> _loader;
+        std::unordered_string_map<std::unique_ptr<abstractions::gui::asset>> _assets;
 
         public:
-            inline bool load_font(std::string_view name, std::string_view path) noexcept
+            inline asset_manager(std::unique_ptr<abstractions::gui::asset_loader> loader) noexcept
+                : _loader(std::move(loader)), _assets()
+            {}
+
+            inline bool load(std::string_view name, std::string_view path, std::string_view type, bool replace = false) noexcept
             {
-                return _fonts.emplace(name, sf::Font()).first->second.loadFromFile(std::string(path));
+                if (replace && _assets.contains(name))
+                    _assets.erase(_assets.find(name));
+                try {
+                    return _assets.try_emplace(std::string(name), _loader->load(path, type)).second;
+                } catch (...) {
+                    return false;
+                }
             }
 
-            inline bool load_texture(std::string_view name, std::string_view path, const sf::IntRect &area = sf::IntRect()) noexcept
-            {
-                return _textures.emplace(name, sf::Texture()).first->second.loadFromFile(std::string(path), area);
-            }
+            inline const abstractions::gui::asset &get(std::string_view name) const noexcept { return *_assets.find(name)->second; }
 
-            inline const sf::Texture &get_texture(std::string_view name) const
+            inline void unload(std::string_view name) noexcept { _assets.erase(_assets.find(name)); }
+            inline void unload(const abstractions::gui::asset &asset) noexcept
             {
-                auto it = _textures.find(name);
-                if (it == _textures.end())
-                    throw std::runtime_error(std::format("ecs: asset_manager: No such texture: {}", name));
-                return it->second;
+                auto it = std::find_if(_assets.begin(), _assets.end(), [&asset](const auto &pair){
+                    return pair.second.get() == std::addressof(asset);
+                });
+                if (it != _assets.end())
+                    _assets.erase(it);
             }
-
-            inline const sf::Font &get_font(std::string_view name) const
-            {
-                auto it = _fonts.find(name);
-                if (it == _fonts.end())
-                    throw std::runtime_error(std::format("ecs: asset_manager: No such font: {}", name));
-                return it->second;
-            }
+            inline void clear() noexcept { _assets.clear(); }
     };
 
-    struct animation_clock {
-        std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
-        std::chrono::steady_clock::duration delta;
-
-        inline void update() noexcept
-        {
-            delta = std::chrono::steady_clock::now() - start;
-        }
-    };
-
-    struct display_element {
-        virtual ~display_element() noexcept = default;
-
-        constexpr display_element(std::unique_ptr<sf::Drawable> drawable, std::optional<std::string_view> key = std::nullopt) noexcept
-            : element(std::move(drawable)), asset_key(key.transform([](auto &&id){ return std::string(id); }))
-        {}
-
-        std::unique_ptr<sf::Drawable> element;
-        std::optional<std::string> asset_key;
-        std::optional<std::function<void(display_element &element, const position &position)>> reposition;
-        bool visible = true;
-
-        static inline void reposition_center(display_element &display, const position &position) noexcept
-        {
-            if (auto *sprite = dynamic_cast<sf::Sprite *>(display.element.get())) {
-                const auto &bounds = sprite->getLocalBounds();
-                sprite->setPosition(position.x + bounds.width / 2, position.y + bounds.height / 2);
-            } else if (auto *text = dynamic_cast<sf::Text *>(display.element.get())) {
-                const auto &bounds = text->getLocalBounds();
-                text->setPosition(position.x + bounds.width / 2, position.y + bounds.height / 2);
-            } else if (auto *shape = dynamic_cast<sf::Shape *>(display.element.get())) {
-                const auto &bounds = shape->getLocalBounds();
-                shape->setPosition(position.x + bounds.width / 2, position.y + bounds.height / 2);
-            }
-        }
-    };
+    struct animation_clock : public clock {};
 
     struct drawable {
-        using elements_container = std::unordered_multimap<std::size_t, std::unique_ptr<display_element>>;
+        using elements_container = std::unordered_multimap<std::size_t, std::unique_ptr<abstractions::gui::drawable_element>>;
         entity asset_manager;
         elements_container elements;
     };
 
-    class animation : public display_element {
+    class animation : public abstractions::gui::sprite {
         public:
             const std::size_t frame_lines, frame_columns;
 
@@ -109,18 +76,15 @@ export namespace ecs::components::gui {
             std::chrono::steady_clock::duration frame_length;
 
         private:
-            sf::Sprite &_sprite;
             std::size_t _frame_line_index{}, _frame_column_index{};
             std::chrono::steady_clock::duration _frame_duration{};
 
         public:
-            animation(const sf::Texture &texture, std::size_t lines, std::size_t columns,
-                std::chrono::steady_clock::duration length = 10ms, std::optional<std::string_view> texture_id = std::nullopt) noexcept
-                : display_element(std::make_unique<sf::Sprite>(texture, sf::IntRect(0, 0,
-                    texture.getSize().x / columns, texture.getSize().y / lines)), texture_id),
-                frame_lines(lines), frame_columns(columns),
-                _image_width(texture.getSize().x / columns), _image_height(texture.getSize().y / lines),
-                frame_length(length), _sprite(static_cast<sf::Sprite &>(*element))
+            animation(const abstractions::gui::texture &texture, std::size_t lines, std::size_t columns,
+                std::chrono::steady_clock::duration length = 10ms) noexcept
+                : frame_lines(lines), frame_columns(columns),
+                _image_width(texture.get_size().x / columns), _image_height(texture.get_size().y / lines),
+                frame_length(length)
             {}
 
             void update(std::chrono::steady_clock::duration delta) noexcept
@@ -130,9 +94,9 @@ export namespace ecs::components::gui {
                     return;
                 _frame_duration %= frame_length;
 
-                _sprite.setTextureRect(sf::IntRect(_image_width * _frame_column_index,
+                this->set_render_area({_image_width * _frame_column_index,
                     _image_height * _frame_line_index,
-                    _image_width, _image_height));
+                    _image_width, _image_height});
 
                 if (++_frame_column_index < frame_columns)
                     return;
