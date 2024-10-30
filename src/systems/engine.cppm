@@ -36,18 +36,22 @@ export namespace ecs::systems::engine {
         std::vector<ecs::entity> entities_to_erase;
 
         std::ranges::for_each(ec.get_entities(), [e, &ec, &hit, &entities_to_erase](auto entity) {
+            if (entity == e) return;
+
             auto hitbox = ec.get_entity_component<components::engine::hitbox>(entity);
-            if (hitbox.has_value() && hitbox->get().left < hit.left + hit.width &&
+            if (hitbox.has_value() && 
+                hitbox->get().left < hit.left + hit.width &&
                 hitbox->get().left + hitbox->get().width > hit.left &&
                 hitbox->get().top < hit.top + hit.height &&
-                hitbox->get().top + hitbox->get().height > hit.top && entity != e) {
-                entities_to_erase.push_back(entity);
-                entities_to_erase.push_back(e);
+                hitbox->get().height + hitbox->get().top > hit.top) 
+            {
+                if (std::find(entities_to_erase.begin(), entities_to_erase.end(), entity) == entities_to_erase.end()) {
+                    entities_to_erase.push_back(entity);
+                }
             }
         });
 
-        for (auto e : entities_to_erase) {
+        for (auto e : entities_to_erase)
             ec.erase_entity(e);
-        }
     }
 }
