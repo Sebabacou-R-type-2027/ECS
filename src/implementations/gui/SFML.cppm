@@ -334,6 +334,12 @@ export namespace ecs::implementations::gui::SFML {
             return {pos.x, pos.y};
         }
 
+        inline vector<std::uint32_t> get_size() const noexcept override
+        {
+            const auto size = this->getSize();
+            return {size.x, size.y};
+        }
+
         inline bool is_input_active(inputs input) const noexcept override
         {
             if (_mouse_buttons.contains(input))
