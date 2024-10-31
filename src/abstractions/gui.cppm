@@ -244,6 +244,7 @@ export namespace ecs::abstractions::gui {
         virtual void close() noexcept = 0;
 
         virtual vector<std::uint32_t> get_cursor_position() const noexcept = 0;
+        virtual vector<std::uint32_t> get_size() const noexcept = 0;
 
         virtual bool is_input_active(inputs input) const noexcept = 0;
     };
