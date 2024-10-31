@@ -10,4 +10,5 @@ target_link_libraries(ecs PRIVATE utils sfml-graphics sfml-window sfml-system)
 
 add_subdirectory(abstractions)
 add_subdirectory(components)
+add_subdirectory(implementations)
 add_subdirectory(systems)
