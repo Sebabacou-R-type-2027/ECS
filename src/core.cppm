@@ -317,8 +317,8 @@ export namespace ecs {
 
     constexpr void registry::run_systems() noexcept
     {
-        std::ranges::for_each(this->get_entities(), [this](auto e) constexpr noexcept {
-            std::ranges::for_each(_systems, [this, e](const system &system) constexpr noexcept {
+        std::ranges::for_each(_systems, [this](const system &system) constexpr noexcept {
+            std::ranges::for_each(this->get_entities(), [this, &system](auto e) constexpr noexcept {
                 system.update(*this, e);
             });
         });
