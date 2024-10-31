@@ -41,6 +41,25 @@ export namespace ecs {
             std::size_t _id;
     };
 
+    class entity_container;
+
+    struct scene {
+        constexpr scene(entity_container &ec) noexcept
+            : _ec(ec), _entities()
+        {}
+
+        virtual ~scene() noexcept;
+
+        protected:
+            entity_container &_ec;
+            std::vector<entity> _entities;
+
+            virtual void create_entities() noexcept = 0;
+
+        private:
+            friend class entity_container;
+    };
+
     /**
      * @brief Class managing entities and their components
      */
@@ -50,12 +69,23 @@ export namespace ecs {
 
         entity_components _components;
         std::vector<bool> _entities;
+        std::unique_ptr<scene> _scene;
         std::size_t _nextEntity = 0;
 
         static constexpr entity to_entity(std::size_t id) noexcept { return entity(id); }
         public:
+
             entity_container() noexcept = default;
             entity_container(const entity_container &) = delete;
+
+            void begin_scene(std::unique_ptr<scene> scene) noexcept
+            {
+                _scene = std::move(scene);
+                if (_scene)
+                    _scene->create_entities();
+            }
+
+            ~entity_container() noexcept { _scene.reset(); }
 
             /**
              * @brief Exception thrown when an entity is not found
@@ -314,6 +344,12 @@ export namespace ecs {
              */
             std::function<void(entity_container &, entity)> update;
     };
+
+    scene::~scene() noexcept
+    {
+        for (auto e : _entities)
+            _ec.erase_entity(e);
+    }
 
     constexpr void registry::run_systems() noexcept
     {
