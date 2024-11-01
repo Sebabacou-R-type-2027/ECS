@@ -31,11 +31,5 @@ export namespace ecs::components {
             const std::chrono::steady_clock::duration &elapsed = delta;
     };
 
-    struct lifestate {
-        constexpr lifestate() noexcept : alive{true} {}
-        constexpr lifestate(bool a) noexcept : alive{a} {}
-        bool alive;
-    };
-
     constexpr clock::~clock() noexcept = default;
 }

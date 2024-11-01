@@ -61,7 +61,7 @@ export namespace ecs::components::gui {
     struct animation_clock : public clock {};
 
     struct drawable {
-        using elements_container = std::multimap<std::size_t, std::unique_ptr<abstractions::gui::drawable_element>>;
+        using elements_container = std::unordered_multimap<std::size_t, std::unique_ptr<abstractions::gui::drawable_element>>;
         entity asset_manager;
         elements_container elements;
     };
