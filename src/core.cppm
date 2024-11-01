@@ -225,7 +225,7 @@ export namespace ecs {
              * @return bool @ref true if the entity was erased, otherwise @ref false
              * @remarks The internal identifier of the entity is made available for new entities
              */
-            constexpr bool erase_entity(entity e) noexcept
+            inline bool erase_entity(entity e) noexcept
             {
                 _entities.at(e) = false;
                 return _components.erase(e);
