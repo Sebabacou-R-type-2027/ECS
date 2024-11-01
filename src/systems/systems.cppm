@@ -23,7 +23,6 @@ export namespace ecs::systems {
             duration period;
             std::ostream &os;
 
-        protected:
             constexpr logger(registry &registry, duration period = 1s, std::ostream &os = std::cout) noexcept
                 : period(period), os(os), _registry(registry),
                 _next(std::chrono::steady_clock::now()),
@@ -36,6 +35,7 @@ export namespace ecs::systems {
                 _registry.remove_system(_system_handle);
             }
 
+        protected:
             virtual void log(entity e, Components &...) const noexcept = 0;
 
         private:

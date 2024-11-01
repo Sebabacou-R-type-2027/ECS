@@ -23,4 +23,42 @@ export namespace std {
 
     template<typename T, typename Allocator = std::allocator<std::pair<const std::string, T>>>
     using unordered_string_map = std::unordered_map<std::string, T, string_hash, std::equal_to<>, Allocator>;
+
+    template<typename T>
+    class unique_intializer {
+        mutable T value;
+
+        public:
+            constexpr unique_intializer(T &&v) noexcept : value(std::move(v)) {}
+
+            template<typename... Args>
+            constexpr unique_intializer(Args &&...args) : value{std::forward<Args>(args)...} {}
+
+            constexpr operator T() const && noexcept { return std::move(value); }
+            constexpr T move() const && noexcept { return std::move(value); }
+    };
+
+    template<typename T>
+    class unique_intializer<const T> : public unique_intializer<T> {
+        using unique_intializer<T>::unique_intializer;
+    };
+
+    template<typename Container, typename T = typename Container::value_type>
+    struct container {
+        static constexpr Container make(std::initializer_list<unique_intializer<T>> il) noexcept
+        {
+            return Container(std::make_move_iterator(il.begin()), std::make_move_iterator(il.end()));
+        }
+    };
+
+    template<typename Container, typename K, typename V>
+    struct container<Container, std::pair<K, V>> {
+        static constexpr Container make(std::initializer_list<unique_intializer<std::pair<std::remove_const_t<K>, std::remove_const_t<V>>>> il) noexcept
+        {
+            Container c{};
+            for (auto &&entry : il)
+                c.insert(std::move(entry).move());
+            return c;
+        }
+    };
 }

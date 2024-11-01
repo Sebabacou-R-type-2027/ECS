@@ -2,7 +2,6 @@
 module;
 
 #include <algorithm>
-#include <any>
 #include <format>
 #include <forward_list>
 #include <functional>
@@ -42,21 +41,51 @@ export namespace ecs {
             std::size_t _id;
     };
 
+    class entity_container;
+
+    struct scene {
+        constexpr scene(entity_container &ec) noexcept
+            : _ec(ec), _entities()
+        {}
+
+        virtual ~scene() noexcept;
+
+        protected:
+            entity_container &_ec;
+            std::vector<entity> _entities;
+
+            virtual void create_entities() noexcept = 0;
+
+        private:
+            friend class entity_container;
+    };
+
     /**
      * @brief Class managing entities and their components
      */
     class entity_container {
-        using component_container = std::unordered_map<std::type_index, std::any>;
+        using component_container = std::unordered_map<std::type_index, std::unique_any>;
         using entity_components = std::unordered_map<std::size_t, component_container>;
 
         entity_components _components;
         std::vector<bool> _entities;
+        std::unique_ptr<scene> _scene;
         std::size_t _nextEntity = 0;
 
         static constexpr entity to_entity(std::size_t id) noexcept { return entity(id); }
         public:
+
             entity_container() noexcept = default;
             entity_container(const entity_container &) = delete;
+
+            void begin_scene(std::unique_ptr<scene> scene) noexcept
+            {
+                _scene = std::move(scene);
+                if (_scene)
+                    _scene->create_entities();
+            }
+
+            ~entity_container() noexcept { _scene.reset(); }
 
             /**
              * @brief Exception thrown when an entity is not found
@@ -131,7 +160,7 @@ export namespace ecs {
                     throw entity_not_found_error(to);
                 _components[to].erase(typeid(Component));
                 return std::any_cast<Component &>(_components.at(to)
-                    .try_emplace(typeid(Component), Component(std::forward<Args>(args)...)).first->second);
+                    .try_emplace(typeid(Component), std::in_place_type<Component>, std::forward<Args>(args)...).first->second);
             }
 
             /**
@@ -316,10 +345,16 @@ export namespace ecs {
             std::function<void(entity_container &, entity)> update;
     };
 
+    scene::~scene() noexcept
+    {
+        for (auto e : _entities)
+            _ec.erase_entity(e);
+    }
+
     constexpr void registry::run_systems() noexcept
     {
-        std::ranges::for_each(this->get_entities(), [this](auto e) constexpr noexcept {
-            std::ranges::for_each(_systems, [this, e](const system &system) constexpr noexcept {
+        std::ranges::for_each(_systems, [this](const system &system) constexpr noexcept {
+            std::ranges::for_each(this->get_entities(), [this, &system](auto e) constexpr noexcept {
                 system.update(*this, e);
             });
         });

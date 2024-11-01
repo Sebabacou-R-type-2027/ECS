@@ -25,3 +25,4 @@ endif()
 find_package(SFML 2.6 COMPONENTS graphics window system CONFIG REQUIRED)
 
 add_subdirectory(lib)
+add_subdirectory(src)

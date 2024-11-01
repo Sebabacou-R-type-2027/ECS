@@ -44,4 +44,12 @@ export namespace std {
             return typeset<std::replace_index_t<T, I>...>();
         }(std::make_index_sequence<N>{});
     }
+
+    struct abstract {
+        constexpr abstract(const abstract&) noexcept = delete;
+        constexpr abstract(abstract&&) noexcept = delete;
+
+        protected:
+            constexpr abstract() noexcept = default;
+    };
 }

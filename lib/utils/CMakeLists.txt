@@ -5,4 +5,5 @@ target_sources(utils PUBLIC
         FILES utils.cppm
             containers.cppm
             types.cppm
+            utilities.cppm
 )
