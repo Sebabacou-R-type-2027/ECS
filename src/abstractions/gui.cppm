@@ -1,8 +1,9 @@
-#if __cpp_lib_modules < 202207L
 module;
 
+#if __cpp_lib_modules < 202207L
 #include <cstdint>
 #include <chrono>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
