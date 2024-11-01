@@ -309,13 +309,37 @@ export namespace ecs::implementations::gui::SFML {
             : RenderWindow(sf::VideoMode(size.x, size.y), std::string(title))
         {}
 
-
         inline void clear() noexcept override { this->RenderWindow::clear(); }
+
         inline void draw(const abstractions::gui::drawable_element &element) noexcept override
         {
             const sf::Drawable &drawable = dynamic_cast<const drawable_element &>(element);
             this->RenderWindow::draw(drawable);
         }
+
+        inline void draw_shader_background() noexcept override
+        {
+            static sf::Shader shader;
+            static sf::Clock clock;
+
+            static bool shaderLoaded = shader.loadFromFile("assets/shaders/background.frag", sf::Shader::Fragment);
+            if (!shaderLoaded) {
+                static bool errorLogged = false;
+                if (!errorLogged) {
+                    std::cerr << "Failed to load shader" << std::endl;
+                    errorLogged = true;
+                }
+                return;
+            }
+
+            static sf::RectangleShape fullscreenRect({static_cast<float>(this->getSize().x), static_cast<float>(this->getSize().y)});
+
+            shader.setUniform("iTime", clock.getElapsedTime().asSeconds());
+            shader.setUniform("iResolution", sf::Glsl::Vec3(static_cast<float>(this->getSize().x), static_cast<float>(this->getSize().y), 0.0f));
+
+            this->RenderWindow::draw(fullscreenRect, &shader);
+        }
+
         inline void display() noexcept override { this->RenderWindow::display(); }
 
         inline bool is_open() noexcept override
