@@ -238,6 +238,7 @@ export namespace ecs::abstractions::gui {
 
         virtual void clear() noexcept = 0;
         virtual void draw(const drawable_element &element) noexcept = 0;
+        virtual void draw_shader_background() noexcept = 0;
         virtual void display() noexcept = 0;
 
         virtual bool is_open() noexcept = 0;
