@@ -15,6 +15,7 @@ namespace ecs {
         this->register_system<const components::gui::drawable>(systems::gui::draw);
         this->register_system<components::gui::animation_clock>(components::clock::cache_system);
         this->register_system<components::gui::drawable, const components::position>(systems::gui::reposition);
+        this->register_system<ecs::components::gui::display>(ecs::systems::gui::draw_shader_background);
         this->register_system<components::gui::display>(systems::gui::clear);
     }
 
