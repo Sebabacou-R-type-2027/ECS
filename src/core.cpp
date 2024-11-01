@@ -22,5 +22,6 @@ namespace ecs {
     {
         this->register_system<components::position, const components::engine::velocity>(systems::engine::movement);
         this->register_system<components::position, const components::engine::controllable>(systems::engine::control);
+        // this->register_system<components::engine::hitbox>(systems::engine::collision);
     }
 }
