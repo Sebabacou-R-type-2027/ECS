@@ -33,4 +33,5 @@ export namespace ecs::systems::gui {
 
     inline void clear(components::gui::display &display) noexcept { display.window->clear(); }
     inline void display(components::gui::display &display) noexcept { display.window->display(); }
+    inline void draw_shader_background(components::gui::display &display) noexcept { display.window->draw_shader_background(); }
 }
