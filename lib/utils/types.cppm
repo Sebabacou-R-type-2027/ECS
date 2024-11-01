@@ -1,6 +1,6 @@
-#if __cpp_lib_modules < 202207L
 module;
 
+#if __cpp_lib_modules < 202207L
 #include <tuple>
 #include <type_traits>
 #endif

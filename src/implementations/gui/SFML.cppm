@@ -1,7 +1,5 @@
 module;
 
-#if __cpp_lib_modules < 202207L
-#endif
 #include <SFML/Graphics.hpp>
 export module ecs:implementations.gui.SFML;
 import :abstractions;
