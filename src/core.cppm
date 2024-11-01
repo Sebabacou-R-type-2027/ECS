@@ -225,7 +225,7 @@ export namespace ecs {
              * @return bool @ref true if the entity was erased, otherwise @ref false
              * @remarks The internal identifier of the entity is made available for new entities
              */
-            constexpr bool erase_entity(entity e) noexcept
+            inline bool erase_entity(entity e) noexcept
             {
                 _entities.at(e) = false;
                 return _components.erase(e);
@@ -333,7 +333,7 @@ export namespace ecs {
         static constexpr void invoke(Function &&f, entity on, entity_container &ec, std::typeset_t<Args...>) noexcept;
 
         template<typename... Args>
-        friend constexpr const system &registry::register_system(auto &&f) noexcept;
+        friend constexpr const system &ecs::registry::register_system(auto &&f) noexcept;
 
         public:
             system(const system &) = delete;
