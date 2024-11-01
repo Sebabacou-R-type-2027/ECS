@@ -277,6 +277,9 @@ export namespace ecs {
              * @brief Run all systems on all entities
              */
             constexpr void run_systems() noexcept;
+
+            void register_gui_systems() noexcept;
+            void register_engine_systems() noexcept;
     };
 
     /**

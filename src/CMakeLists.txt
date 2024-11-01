@@ -1,7 +1,7 @@
 add_library(ecs)
 
-target_sources(ecs PUBLIC
-    FILE_SET CXX_MODULES
+target_sources(ecs PRIVATE core.cpp
+    PUBLIC FILE_SET CXX_MODULES
         FILES ecs.cppm
             core.cppm
 )
