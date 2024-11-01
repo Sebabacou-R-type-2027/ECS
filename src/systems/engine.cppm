@@ -1,13 +1,9 @@
-module;
-
-#include <SFML/Window/Keyboard.hpp>
 export module ecs:systems.engine;
 import :core;
+import :abstractions.gui;
 import :components;
 import :components.gui;
 import :components.engine;
-import :abstractions;
-import :core;
 
 #if __cpp_lib_modules >= 202207L
 import std;
@@ -21,17 +17,23 @@ export namespace ecs::systems::engine
         pos.y += d.y;
     }
 
-    constexpr void control(components::position &pos, const components::engine::controllable &c) noexcept
+    constexpr void control(entity_container &ec, components::position &pos, const components::engine::controllable &c) noexcept
     {
         if (!c.enabled)
             return;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+
+        auto display = ec.get_entity(c.display).and_then([&ec](auto e){
+            return ec.get_entity_component<components::gui::display>(e);
+        });
+        if (!display)
+            return;
+        if (display->get().window->is_input_active(abstractions::gui::inputs::left))
             pos.x -= c.speed;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+        if (display->get().window->is_input_active(abstractions::gui::inputs::right))
             pos.x += c.speed;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+        if (display->get().window->is_input_active(abstractions::gui::inputs::up))
             pos.y -= c.speed;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+        if (display->get().window->is_input_active(abstractions::gui::inputs::down))
             pos.y += c.speed;
     }
 

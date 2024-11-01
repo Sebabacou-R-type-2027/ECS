@@ -1,5 +1,6 @@
 export module ecs:systems.gui;
 import :core;
+import :abstractions.gui;
 import :components;
 import :components.gui;
 
@@ -22,7 +23,7 @@ export namespace ecs::systems::gui {
             auto clock = entity.and_then([&ec](auto e){
                 return ec.get_entity_component<const components::gui::animation_clock>(e);
             });
-            auto *animation = dynamic_cast<components::gui::animation *>(pair.second.get());
+            auto *animation = dynamic_cast<abstractions::gui::animation *>(pair.second.get());
             if (animation && clock)
                 animation->update(clock->get().elapsed);
             if (display)

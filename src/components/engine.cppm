@@ -1,4 +1,5 @@
 export module ecs:components.engine;
+import :core;
 import :components;
 import :abstractions;
 
@@ -8,6 +9,7 @@ export namespace ecs::components::engine {
     };
 
     struct controllable {
+        ecs::entity display;
         bool enabled;
         float speed;
     };
