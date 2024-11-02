@@ -93,6 +93,9 @@ export namespace ecs::abstractions::gui {
 
         virtual rectangle<float> bounds(bool local = false) const noexcept = 0;
 
+        virtual void set_outline_color(color color) noexcept = 0;
+        virtual void set_outline_thickness(float thickness) noexcept = 0;
+
         constexpr bool is_visible() const noexcept { return _visible; }
         constexpr bool make_visible(bool visible) noexcept
         {
