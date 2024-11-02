@@ -105,6 +105,18 @@ export namespace ecs::implementations::gui::SFML {
             return old;
         }
 
+        inline void set_outline_color(color color) noexcept override
+        {
+            if (auto shape = dynamic_cast<sf::Shape *>(&this->_element))
+                shape->setOutlineColor(sf::Color(color.r, color.g, color.b, color.a));
+        }
+
+        inline void set_outline_thickness(float thickness) noexcept override
+        {
+            if (auto shape = dynamic_cast<sf::Shape *>(&this->_element))
+                shape->setOutlineThickness(thickness);
+        }
+
         private:
             sf::Transformable &_element;
             sf::Drawable &_drawable;
