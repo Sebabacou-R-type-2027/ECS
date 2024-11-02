@@ -48,9 +48,9 @@ export namespace ecs::systems::engine
             if (e == other)
                 return;
             auto other_box = ec.get_entity_component<components::engine::hitbox>(other);
-            if (other_box.has_value() && box.area.intersects(other_box->get().area) && !box.triggered && !other_box->get().triggered) {
-                other_box->get().triggered = true;
-                box.triggered = true;
+            if (other_box.has_value() && box.area.intersects(other_box->get().area)) {
+                other_box->get().triggered_by = e;
+                box.triggered_by = other;
             }
         });
     }

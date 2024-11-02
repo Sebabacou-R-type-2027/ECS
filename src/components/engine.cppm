@@ -3,6 +3,10 @@ import :core;
 import :abstractions;
 import :components;
 
+#if __cpp_lib_modules >= 202207L
+import std;
+#endif
+
 export namespace ecs::components::engine {
     struct velocity : public position {
         using position::position;
@@ -16,6 +20,6 @@ export namespace ecs::components::engine {
 
     struct hitbox {
         abstractions::rectangle<float> area;
-        bool triggered = false;
+        std::optional<ecs::entity> triggered_by;
     };
 }
