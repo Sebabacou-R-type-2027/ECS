@@ -477,6 +477,17 @@ export namespace ecs::implementations::gui::SFML {
         {abstractions::gui::inputs::end, sf::Keyboard::Key::End},
         {abstractions::gui::inputs::pageup, sf::Keyboard::Key::PageUp},
         {abstractions::gui::inputs::pagedown, sf::Keyboard::Key::PageDown},
-        {abstractions::gui::inputs::pause, sf::Keyboard::Key::Pause}
+        {abstractions::gui::inputs::pause, sf::Keyboard::Key::Pause},
+        {abstractions::gui::inputs::backspace, sf::Keyboard::Key::BackSpace},
+        {abstractions::gui::inputs::numpad0, sf::Keyboard::Key::Numpad0},
+        {abstractions::gui::inputs::numpad1, sf::Keyboard::Key::Numpad1},
+        {abstractions::gui::inputs::numpad2, sf::Keyboard::Key::Numpad2},
+        {abstractions::gui::inputs::numpad3, sf::Keyboard::Key::Numpad3},
+        {abstractions::gui::inputs::numpad4, sf::Keyboard::Key::Numpad4},
+        {abstractions::gui::inputs::numpad5, sf::Keyboard::Key::Numpad5},
+        {abstractions::gui::inputs::numpad6, sf::Keyboard::Key::Numpad6},
+        {abstractions::gui::inputs::numpad7, sf::Keyboard::Key::Numpad7},
+        {abstractions::gui::inputs::numpad8, sf::Keyboard::Key::Numpad8},
+        {abstractions::gui::inputs::numpad9, sf::Keyboard::Key::Numpad9}
     };
 }
