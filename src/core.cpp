@@ -22,7 +22,8 @@ namespace ecs {
     void registry::register_engine_systems() noexcept
     {
         this->register_system<components::position, const components::engine::velocity>(systems::engine::movement);
+        this->register_system<components::position, components::engine::hitbox>(systems::engine::update_hitbox_position);
         this->register_system<components::position, const components::engine::controllable>(systems::engine::control);
-        // this->register_system<components::engine::hitbox>(systems::engine::collision);
+        this->register_system<components::engine::hitbox>(systems::engine::collision);
     }
 }

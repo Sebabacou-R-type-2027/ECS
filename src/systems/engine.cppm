@@ -38,6 +38,11 @@ export namespace ecs::systems::engine
             pos.y += c.speed;
     }
 
+    constexpr void update_hitbox_position(ecs::components::position &pos, ecs::components::engine::hitbox &box) noexcept {
+        box.box.x = pos.x;
+        box.box.y = pos.y;
+    }
+
     constexpr void collision(entity e, entity_container &ec, components::engine::hitbox &box) noexcept
     {
         std::ranges::for_each(ec.get_entities(), [&](entity other) {
@@ -45,11 +50,9 @@ export namespace ecs::systems::engine
                 return;
             auto other_box = ec.get_entity_component<components::engine::hitbox>(other);
             if (other_box.has_value() && box.box.intersects(other_box->get().box) && !box.is_trigger && !other_box->get().is_trigger) {
-                std::cout << "Collision detected" << std::endl;
                 other_box->get().is_trigger = true;
                 box.is_trigger = true;
             }
         });
     }
-
 }
