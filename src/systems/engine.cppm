@@ -44,14 +44,25 @@ export namespace ecs::systems::engine
 
     constexpr void collision(entity e, entity_container &ec, components::engine::hitbox &box) noexcept
     {
+        bool collision_detected = false;
+
         std::ranges::for_each(ec.get_entities(), [&](entity other) {
             if (e == other)
                 return;
+
             auto other_box = ec.get_entity_component<components::engine::hitbox>(other);
-            if (other_box.has_value() && box.area.intersects(other_box->get().area)) {
-                other_box->get().triggered_by = e;
-                box.triggered_by = other;
+
+            if (other_box.has_value()) {
+                if (box.area.intersects(other_box->get().area)) {
+                    other_box->get().triggered_by = e;
+                    box.triggered_by = other;
+                    collision_detected = true;
+                }
             }
         });
+
+        if (!collision_detected) {
+            box.triggered_by = std::nullopt;
+        }
     }
 }
