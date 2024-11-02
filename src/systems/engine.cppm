@@ -1,9 +1,10 @@
 export module ecs:systems.engine;
+
 import :core;
 import :abstractions.gui;
 import :components;
-import :components.gui;
 import :components.engine;
+import :components.gui;
 
 #if __cpp_lib_modules >= 202207L
 import std;
