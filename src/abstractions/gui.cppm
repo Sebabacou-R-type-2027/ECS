@@ -29,7 +29,8 @@ export namespace ecs::abstractions::gui {
         lctrl, rctrl, lshift, rshift, lalt, ralt, lsuper, rsuper,
         tab, backtick, minus, equal, lbracket, rbracket, backslash, semicolon, quote, comma, period, slash,
         insert, home, end, pageup, pagedown, pause,
-        lclick, rclick, mclick, x1click, x2click
+        lclick, rclick, mclick, x1click, x2click,
+        numpad0, numpad1, numpad2, numpad3, numpad4, numpad5, numpad6, numpad7, numpad8, numpad9
     };
 
     struct color {
