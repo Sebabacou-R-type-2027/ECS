@@ -4,7 +4,6 @@ import :abstractions.gui;
 import :components;
 import :components.gui;
 import :components.engine;
-import :components.gui;
 
 #if __cpp_lib_modules >= 202207L
 import std;
@@ -38,9 +37,9 @@ export namespace ecs::systems::engine
             pos.y += c.speed;
     }
 
-    constexpr void update_hitbox_position(ecs::components::position &pos, ecs::components::engine::hitbox &box) noexcept {
-        box.box.x = pos.x;
-        box.box.y = pos.y;
+    constexpr void update_hitbox_position(const ecs::components::position &pos, ecs::components::engine::hitbox &box) noexcept {
+        box.area.x = pos.x;
+        box.area.y = pos.y;
     }
 
     constexpr void collision(entity e, entity_container &ec, components::engine::hitbox &box) noexcept
@@ -49,9 +48,9 @@ export namespace ecs::systems::engine
             if (e == other)
                 return;
             auto other_box = ec.get_entity_component<components::engine::hitbox>(other);
-            if (other_box.has_value() && box.box.intersects(other_box->get().box) && !box.is_trigger && !other_box->get().is_trigger) {
-                other_box->get().is_trigger = true;
-                box.is_trigger = true;
+            if (other_box.has_value() && box.area.intersects(other_box->get().area) && !box.triggered && !other_box->get().triggered) {
+                other_box->get().triggered = true;
+                box.triggered = true;
             }
         });
     }

@@ -1,7 +1,7 @@
 export module ecs:components.engine;
 import :core;
-import :components;
 import :abstractions;
+import :components;
 
 export namespace ecs::components::engine {
     struct velocity : public position {
@@ -15,7 +15,7 @@ export namespace ecs::components::engine {
     };
 
     struct hitbox {
-        abstractions::rectangle<float> box;
-        bool is_trigger = false;
+        abstractions::rectangle<float> area;
+        bool triggered = false;
     };
 }
