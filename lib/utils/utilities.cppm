@@ -3,13 +3,29 @@ import :types;
 
 import std;
 
+/**
+    * @brief Namespace containing utilities
+
+    * This namespace contains utilities functions and classes.
+ */
 namespace detail {
+
+    /**
+        * @brief Abstract class representing a type holder
+
+        * This class is used to represent a type holder.
+     */
     struct type_holder : public std::abstract {
         virtual ~type_holder() noexcept = default;
 
         virtual constexpr const std::type_info &type() const noexcept = 0;
     };
 
+    /**
+        * @brief Check if a type is an in-place type
+
+        * This function is used to check if a type is an in-place type.
+     */
     template <typename T>
     struct is_in_place_type : std::false_type {};
     template <typename T>
@@ -19,7 +35,18 @@ namespace detail {
     constexpr bool is_in_place_type_v = is_in_place_type<std::remove_cvref_t<T>>::value;
 }
 
+/**
+    * @brief Class representing a unique any
+
+    * This class is used to represent a unique any.
+ */
 export namespace std {
+
+    /**
+        * @brief Class representing a unique any
+
+        * This class is used to represent a unique any.
+     */
     class unique_any {
         template<typename T>
         struct holder : public detail::type_holder {
@@ -106,8 +133,18 @@ export namespace std {
             constexpr const std::type_info &type() const noexcept { return content ? content->type() : typeid(void); }
     };
 
+    /**
+        * @brief Swap two unique any
+
+        * This function is used to swap two unique any.
+     */
     constexpr void swap(unique_any &lhs, unique_any &rhs) noexcept { lhs.swap(rhs); }
 
+    /**
+        * @brief Check if two unique any are equal
+
+        * This function is used to check if two unique any are equal.
+     */
     template<typename T>
     constexpr T *any_cast(unique_any *operand) noexcept
     {
@@ -117,6 +154,11 @@ export namespace std {
             : nullptr;
     }
 
+    /**
+        * @brief Check if two unique any are equal
+
+        * This function is used to check if two unique any are equal.
+     */
     template<typename T>
     constexpr const T *any_cast(const unique_any *operand) noexcept
     {
@@ -124,6 +166,11 @@ export namespace std {
         return any_cast<T>(const_cast<unique_any *>(operand));
     }
 
+    /**
+        * @brief Check if two unique any are equal
+
+        * This function is used to check if two unique any are equal.
+     */
     template<typename T>
     constexpr T any_cast(unique_any &operand)
     {
@@ -134,6 +181,11 @@ export namespace std {
         return static_cast<T>(*std::any_cast<U>(std::addressof(operand)));
     }
 
+    /**
+        * @brief Check if two unique any are equal
+
+        * This function is used to check if two unique any are equal.
+     */
     template<typename T>
     constexpr T any_cast(const unique_any &operand)
     {
@@ -144,6 +196,11 @@ export namespace std {
         return static_cast<T>(*std::any_cast<U>(std::addressof(operand)));
     }
 
+    /**
+        * @brief Check if two unique any are equal
+
+        * This function is used to check if two unique any are equal.
+     */
     template<typename T>
     constexpr T any_cast(unique_any&& operand)
     {
@@ -154,6 +211,11 @@ export namespace std {
         return static_cast<T>(std::move(*std::any_cast<U>(std::addressof(operand))));
     }
 
+    /**
+        * @brief Check if two unique any are equal
+
+        * This function is used to check if two unique any are equal.
+     */
     template<typename T, typename... Args>
     constexpr unique_any make_any(Args &&...args)
     noexcept(std::is_nothrow_constructible_v<unique_any, std::in_place_type_t<T>, Args...>)
@@ -161,6 +223,11 @@ export namespace std {
         return unique_any(std::in_place_type<T>, std::forward<Args>(args)...);
     }
 
+    /**
+        * @brief Check if two unique any are equal
+
+        * This function is used to check if two unique any are equal.
+     */
     template<typename T, typename U, typename... Args>
     constexpr unique_any make_any(std::initializer_list<U> il, Args &&...args)
     noexcept(std::is_nothrow_constructible_v<unique_any, std::in_place_type_t<T>, std::initializer_list<U>, Args...>)

@@ -5,12 +5,29 @@ import :components;
 import :components.gui;
 
 export namespace ecs::systems::gui {
+
+    /**
+        * @brief Clear the display
+
+        * This function is used to clear the display.
+
+        * @param display The display component
+        * @param position The position of the drawable
+     */
     void reposition(components::gui::drawable &drawable, const components::position &position) noexcept
     {
         for (auto &pair : drawable.elements)
             pair.second->reposition(position);
     }
 
+    /**
+        * @brief Draw the drawable
+
+        * This function is used to draw the drawable.
+
+        * @param ec The entity container
+        * @param drawable The drawable component
+     */
     void draw(entity_container &ec, const components::gui::drawable &drawable) noexcept
     {
         for (const auto &pair : drawable.elements) {
