@@ -35,6 +35,7 @@ export namespace ecs::systems::engine
             pos.y -= c.speed;
         if (display->get().window->is_input_active(abstractions::gui::inputs::down))
             pos.y += c.speed;
+
     }
 
     constexpr void update_hitbox_position(const ecs::components::position &pos, ecs::components::engine::hitbox &box) noexcept {

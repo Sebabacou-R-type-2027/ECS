@@ -16,6 +16,7 @@ export namespace ecs::components::engine {
         ecs::entity display;
         bool enabled;
         float speed;
+        int network_id;
     };
 
     struct hitbox {
