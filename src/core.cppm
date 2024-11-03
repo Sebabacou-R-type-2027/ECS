@@ -1,22 +1,6 @@
-#if __cpp_lib_modules < 202207L
-module;
-
-#include <algorithm>
-#include <format>
-#include <forward_list>
-#include <functional>
-#include <optional>
-#include <ranges>
-#include <stdexcept>
-#include <typeindex>
-#include <unordered_map>
-#include <vector>
-#endif
 export module ecs:core;
 
-#if __cpp_lib_modules >= 202207L
 import std;
-#endif
 import utils;
 
 /**
@@ -225,7 +209,7 @@ export namespace ecs {
              * @return bool @ref true if the entity was erased, otherwise @ref false
              * @remarks The internal identifier of the entity is made available for new entities
              */
-            constexpr bool erase_entity(entity e) noexcept
+            inline bool erase_entity(entity e) noexcept
             {
                 _entities.at(e) = false;
                 return _components.erase(e);
@@ -332,8 +316,12 @@ export namespace ecs {
         template<typename Function, typename... Args>
         static constexpr void invoke(Function &&f, entity on, entity_container &ec, std::typeset_t<Args...>) noexcept;
 
+#ifdef WIN32
+        friend class registry;
+#else
         template<typename... Args>
         friend constexpr const system &registry::register_system(auto &&f) noexcept;
+#endif
 
         public:
             system(const system &) = delete;

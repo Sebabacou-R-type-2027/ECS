@@ -1,14 +1,7 @@
-#if __cpp_lib_modules < 202207L
-module;
-
-#include <chrono>
-#endif
 export module ecs:components;
 import :abstractions;
 
-#if __cpp_lib_modules >= 202207L
 import std;
-#endif
 
 export namespace ecs::components {
     using position = abstractions::vector<float>;

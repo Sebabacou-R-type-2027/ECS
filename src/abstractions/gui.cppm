@@ -1,19 +1,7 @@
-#if __cpp_lib_modules < 202207L
-module;
-
-#include <cstdint>
-#include <chrono>
-#include <memory>
-#include <optional>
-#include <string>
-#include <string_view>
-#endif
 export module ecs:abstractions.gui;
 import :abstractions;
 
-#if __cpp_lib_modules >= 202207L
 import std;
-#endif
 
 using namespace std::chrono_literals;
 export namespace ecs::abstractions::gui {

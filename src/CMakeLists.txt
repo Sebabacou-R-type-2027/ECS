@@ -6,7 +6,7 @@ target_sources(ecs PRIVATE core.cpp
             core.cppm
 )
 
-target_link_libraries(ecs PRIVATE utils sfml-graphics sfml-window sfml-system)
+target_link_libraries(ecs PUBLIC utils)
 
 add_subdirectory(abstractions)
 add_subdirectory(components)

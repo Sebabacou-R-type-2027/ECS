@@ -1,17 +1,7 @@
-#if __cpp_lib_modules < 202207L
-module;
-
-#include <initializer_list>
-#include <memory>
-#include <typeinfo>
-#include <type_traits>
-#endif
 export module utils:utilities;
 import :types;
 
-#if __cpp_lib_modules >= 202207L
 import std;
-#endif
 
 namespace detail {
     struct type_holder : public std::abstract {

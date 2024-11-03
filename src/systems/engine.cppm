@@ -5,9 +5,7 @@ import :components;
 import :components.gui;
 import :components.engine;
 
-#if __cpp_lib_modules >= 202207L
 import std;
-#endif
 
 export namespace ecs::systems::engine
 {

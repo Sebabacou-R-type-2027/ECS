@@ -3,9 +3,7 @@ import :core;
 import :abstractions;
 import :components;
 
-#if __cpp_lib_modules >= 202207L
 import std;
-#endif
 
 export namespace ecs::components::engine {
     struct velocity : public position {
