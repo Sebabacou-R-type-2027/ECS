@@ -316,8 +316,12 @@ export namespace ecs {
         template<typename Function, typename... Args>
         static constexpr void invoke(Function &&f, entity on, entity_container &ec, std::typeset_t<Args...>) noexcept;
 
+#ifdef WIN32
+        friend class registry;
+#else
         template<typename... Args>
         friend constexpr const system &registry::register_system(auto &&f) noexcept;
+#endif
 
         public:
             system(const system &) = delete;
