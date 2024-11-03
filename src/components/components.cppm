@@ -1,20 +1,18 @@
-#if __cpp_lib_modules < 202207L
-module;
-
-#include <chrono>
-#endif
 export module ecs:components;
 import :abstractions;
 
-#if __cpp_lib_modules >= 202207L
 import std;
-#endif
 
 export namespace ecs::components {
     using position = abstractions::vector<float>;
 
     using namespace std::chrono_literals;
 
+    /**
+        * @brief Component that defines the velocity
+
+        * This component is used to define the velocity of the entity. It contains the x and y velocity of the entity.
+     */
     class clock {
         std::chrono::steady_clock::time_point last = std::chrono::steady_clock::now();
         std::chrono::steady_clock::duration delta = 0s;

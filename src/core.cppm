@@ -1,22 +1,6 @@
-#if __cpp_lib_modules < 202207L
-module;
-
-#include <algorithm>
-#include <format>
-#include <forward_list>
-#include <functional>
-#include <optional>
-#include <ranges>
-#include <stdexcept>
-#include <typeindex>
-#include <unordered_map>
-#include <vector>
-#endif
 export module ecs:core;
 
-#if __cpp_lib_modules >= 202207L
 import std;
-#endif
 import utils;
 
 /**
@@ -332,8 +316,12 @@ export namespace ecs {
         template<typename Function, typename... Args>
         static constexpr void invoke(Function &&f, entity on, entity_container &ec, std::typeset_t<Args...>) noexcept;
 
+#ifdef WIN32
+        friend class registry;
+#else
         template<typename... Args>
         friend constexpr const system &ecs::registry::register_system(auto &&f) noexcept;
+#endif
 
         public:
             system(const system &) = delete;
@@ -354,6 +342,11 @@ export namespace ecs {
             _ec.erase_entity(e);
     }
 
+    /**
+        * @brief Run all systems on all entities
+
+        * This function is used to run all systems on all entities.
+     */
     constexpr void registry::run_systems() noexcept
     {
         std::ranges::for_each(_systems, [this](const system &system) constexpr noexcept {
@@ -363,6 +356,15 @@ export namespace ecs {
         });
     };
 
+    /**
+        * @brief Register a new system to run on all entities
+
+        * This function is used to register a new system to run on all entities.
+
+        * @tparam Args The types of the components the system requires
+        * @param f The invocable object to execute by passing the components
+        * @return constexpr const system& The registered system
+     */
     template<typename... Args>
     constexpr const system &registry::register_system(auto &&f) noexcept
     {
@@ -370,6 +372,11 @@ export namespace ecs {
         return _systems.front();
     }
 
+    /**
+        * @brief Register the GUI systems
+
+        * This function is used to register the GUI systems.
+     */
     template<typename Function, typename... Args>
     constexpr void system::invoke(Function &&f, entity on, entity_container &ec, std::typeset_t<Args...>) noexcept
     {
@@ -378,6 +385,11 @@ export namespace ecs {
         std::invoke(std::forward<Function>(f), ec.get_entity_component<Args>(on)->get()...);
     }
 
+    /**
+        * @brief Register the GUI systems
+
+        * This function is used to register the GUI systems.
+     */
     template<typename... Args, std::invocable<std::add_lvalue_reference_t<Args>...> Function>
     constexpr system::system(Function &&f, std::typeset_t<Args...>) noexcept
         : update([&f](entity_container &ec, entity e) constexpr noexcept {
@@ -385,6 +397,11 @@ export namespace ecs {
         })
     {}
 
+    /**
+        * @brief Register the GUI systems
+
+        * This function is used to register the GUI systems.
+     */
     template<typename... Args, std::invocable<entity_container &, std::add_lvalue_reference_t<Args>...> Function>
     constexpr system::system(Function &&f, std::typeset_t<Args...>) noexcept
         : update([&f](entity_container &ec, entity e) constexpr noexcept {
@@ -392,6 +409,11 @@ export namespace ecs {
         })
     {}
 
+    /**
+        * @brief Register the GUI systems
+
+        * This function is used to register the GUI systems.
+     */
     template<typename... Args, std::invocable<entity, std::add_lvalue_reference_t<Args>...> Function>
     constexpr system::system(Function &&f, std::typeset_t<Args...>) noexcept
         : update([&f](entity_container &ec, entity e) constexpr noexcept {
@@ -399,6 +421,11 @@ export namespace ecs {
         })
     {}
 
+    /**
+        * @brief Register the GUI systems
+
+        * This function is used to register the GUI systems.
+     */
     template<typename... Args, std::invocable<entity, entity_container &, std::add_lvalue_reference_t<Args>...> Function>
     constexpr system::system(Function &&f, std::typeset_t<Args...>) noexcept
         : update([&f](entity_container &ec, entity e) constexpr noexcept {

@@ -5,18 +5,34 @@ import :components;
 import :components.gui;
 import :components.engine;
 
-#if __cpp_lib_modules >= 202207L
 import std;
-#endif
 
 export namespace ecs::systems::engine
 {
+
+    /**
+        * @brief Move the entity
+
+        * This function is used to move the entity with the given position and velocity.
+
+        * @param pos The position of the entity
+        * @param d The velocity of the entity
+     */
     constexpr void movement(components::position &pos, const components::engine::velocity &d) noexcept
     {
         pos.x += d.x;
         pos.y += d.y;
     }
 
+    /**
+        * @brief Control the entity
+
+        * This function is used to control the entity with the given position and controllable component.
+
+        * @param ec The entity container
+        * @param pos The position of the entity
+        * @param c The controllable component
+     */
     constexpr void control(entity_container &ec, components::position &pos, const components::engine::controllable &c) noexcept
     {
         if (!c.enabled)
@@ -37,11 +53,28 @@ export namespace ecs::systems::engine
             pos.y += c.speed;
     }
 
+    /**
+        * @brief Update the hitbox position
+
+        * This function is used to update the hitbox position with the given position and hitbox component.
+
+        * @param pos The position of the entity
+        * @param box The hitbox component
+     */
     constexpr void update_hitbox_position(const ecs::components::position &pos, ecs::components::engine::hitbox &box) noexcept {
         box.area.x = pos.x;
         box.area.y = pos.y;
     }
 
+    /**
+        * @brief Handle the collision
+
+        * This function is used to handle the collision between entities.
+
+        * @param e The entity
+        * @param ec The entity container
+        * @param box The hitbox component
+     */
     constexpr void collision(entity e, entity_container &ec, components::engine::hitbox &box) noexcept
     {
         bool collision_detected = false;
