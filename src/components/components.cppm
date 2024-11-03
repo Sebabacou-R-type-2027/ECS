@@ -15,6 +15,11 @@ export namespace ecs::components {
 
     using namespace std::chrono_literals;
 
+    /**
+        * @brief Component that defines the velocity
+
+        * This component is used to define the velocity of the entity. It contains the x and y velocity of the entity.
+     */
     class clock {
         std::chrono::steady_clock::time_point last = std::chrono::steady_clock::now();
         std::chrono::steady_clock::duration delta = 0s;

@@ -23,6 +23,15 @@ export namespace ecs::systems {
             duration period;
             std::ostream &os;
 
+            /**
+                * @brief Construct a new logger object
+                * 
+                * This function is used to construct a new logger object.
+                * 
+                * @param registry The registry
+                * @param period The period
+                * @param os The output stream
+             */
             constexpr logger(registry &registry, duration period = 1s, std::ostream &os = std::cout) noexcept
                 : period(period), os(os), _registry(registry),
                 _next(std::chrono::steady_clock::now()),

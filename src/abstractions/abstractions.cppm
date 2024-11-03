@@ -12,6 +12,12 @@ import std;
 #endif
 
 export namespace ecs::abstractions {
+
+    /**
+        * @brief Vector abstraction
+
+        * This struct is used to abstract a vector.
+     */
     template<typename T> requires std::integral<T> || std::floating_point<T>
     struct vector {
         constexpr vector() noexcept = default;
@@ -25,6 +31,11 @@ export namespace ecs::abstractions {
         T x{}, y{};
     };
 
+    /**
+        * @brief Rectangle abstraction
+
+        * This struct is used to abstract a rectangle.
+     */
     template<typename T> requires std::integral<T> || std::floating_point<T>
     struct rectangle {
         constexpr rectangle() noexcept = default;

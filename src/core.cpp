@@ -8,6 +8,12 @@ import :systems.engine;
 import :systems.gui;
 
 namespace ecs {
+
+    /**
+        * @brief Run all systems on all entities
+
+        * This function is used to run all systems on all entities.
+     */
     void registry::register_gui_systems() noexcept
     {
         this->register_system<components::gui::display>(systems::gui::clear);
@@ -18,6 +24,11 @@ namespace ecs {
         this->register_system<components::gui::drawable, const components::position>(systems::gui::reposition);
     }
 
+    /**
+        * @brief Register the GUI systems
+
+        * This function is used to register the GUI systems.
+     */
     void registry::register_engine_systems() noexcept
     {
         this->register_system<components::position, const components::engine::velocity>(systems::engine::movement);
