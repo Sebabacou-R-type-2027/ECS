@@ -1,17 +1,8 @@
-#if __cpp_lib_modules < 202207L
-module;
-
-#include <chrono>
-#include <functional>
-#include <iostream>
-#endif
 export module ecs:systems;
 import :core;
 import :components;
 
-#if __cpp_lib_modules >= 202207L
 import std;
-#endif
 
 using namespace std::chrono_literals;
 

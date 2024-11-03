@@ -1,18 +1,9 @@
-#if __cpp_lib_modules < 202207L
-module;
-
-#include <chrono>
-#include <memory>
-#include <map>
-#endif
 export module ecs:components.gui;
 import :core;
 import :abstractions.gui;
 import :components;
 
-#if __cpp_lib_modules >= 202207L
 import std;
-#endif
 import utils;
 
 using namespace std::string_literals;

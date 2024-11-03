@@ -1,22 +1,6 @@
-#if __cpp_lib_modules < 202207L
-module;
-
-#include <algorithm>
-#include <format>
-#include <forward_list>
-#include <functional>
-#include <optional>
-#include <ranges>
-#include <stdexcept>
-#include <typeindex>
-#include <unordered_map>
-#include <vector>
-#endif
 export module ecs:core;
 
-#if __cpp_lib_modules >= 202207L
 import std;
-#endif
 import utils;
 
 /**

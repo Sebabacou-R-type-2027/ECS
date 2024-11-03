@@ -6,9 +6,7 @@ import :abstractions;
 import :abstractions.gui;
 import :components.gui;
 
-#if __cpp_lib_modules >= 202207L
 import std;
-#endif
 
 export namespace ecs::implementations::gui::SFML {
     using namespace abstractions;

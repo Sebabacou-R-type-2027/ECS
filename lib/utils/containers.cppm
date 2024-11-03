@@ -1,14 +1,6 @@
-module;
-
-#if __cpp_lib_modules < 202207L
-#include <string>
-#include <unordered_map>
-#endif
 export module utils:containers;
 
-#if __cpp_lib_modules >= 202207L
 import std;
-#endif
 
 export namespace std {
     struct string_hash

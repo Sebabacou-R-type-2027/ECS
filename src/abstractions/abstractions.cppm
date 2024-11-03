@@ -1,15 +1,6 @@
-module;
-
-#if __cpp_lib_modules < 202207L
-#include <algorithm>
-#include <concepts>
-#include <optional>
-#endif
 export module ecs:abstractions;
 
-#if __cpp_lib_modules >= 202207L
 import std;
-#endif
 
 export namespace ecs::abstractions {
     template<typename T> requires std::integral<T> || std::floating_point<T>
