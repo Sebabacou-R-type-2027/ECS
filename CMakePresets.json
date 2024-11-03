@@ -17,6 +17,8 @@
             "cacheVariables": {
                 "CMAKE_CXX_STANDARD": "23",
                 "CMAKE_EXPERIMENTAL_CXX_IMPORT_STD": "0e5b6991-d74f-4b3d-a41c-cf096e0b2508",
+                "CMAKE_EXPERIMENTAL_EXPORT_PACKAGE_DEPENDENCIES": "1942b4fa-b2c5-4546-9385-83f254070067",
+                "CMAKE_EXPORT_FIND_PACKAGE_NAME": "ecs",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "CMAKE_COLOR_DIAGNOSTICS": "ON"
             }
@@ -85,6 +87,46 @@
             "configurePreset": "llvm"
         }
     ],
+    "packagePresets": [
+        {
+            "name": "base",
+            "configurePreset": "base",
+            "generators": [
+                "TGZ"
+            ],
+            "packageName": "ECS"
+        },
+        {
+            "name": "default",
+            "inherits": "base",
+            "configurations": [
+                "Debug"
+            ],
+            "output": {
+                "verbose": true
+            }
+        },
+        {
+            "name": "llvm",
+            "inherits": "default",
+            "configurePreset": "llvm"
+        },
+        {
+            "name": "release",
+            "inherits": "base",
+            "configurations": [
+                "Release"
+            ],
+            "output": {
+                "verbose": false
+            }
+        },
+        {
+            "name": "release-llvm",
+            "inherits": "release",
+            "configurePreset": "llvm"
+        }
+    ],
     "workflowPresets": [
         {
             "name": "default",
@@ -99,6 +141,10 @@
                 },
                 {
                     "type": "test",
+                    "name": "default"
+                },
+                {
+                    "type": "package",
                     "name": "default"
                 }
             ]
@@ -117,6 +163,10 @@
                 {
                     "type": "test",
                     "name": "llvm"
+                },
+                {
+                    "type": "package",
+                    "name": "llvm"
                 }
             ]
         },
@@ -134,6 +184,10 @@
                 {
                     "type": "test",
                     "name": "release"
+                },
+                {
+                    "type": "package",
+                    "name": "release"
                 }
             ]
         },
@@ -150,6 +204,10 @@
                 },
                 {
                     "type": "test",
+                    "name": "release-llvm"
+                },
+                {
+                    "type": "package",
                     "name": "release-llvm"
                 }
             ]

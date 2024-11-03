@@ -6,9 +6,13 @@ target_sources(ecs PRIVATE core.cpp
             core.cppm
 )
 
-target_link_libraries(ecs PUBLIC utils)
-
 add_subdirectory(abstractions)
 add_subdirectory(components)
 add_subdirectory(implementations)
 add_subdirectory(systems)
+
+target_link_libraries(ecs PUBLIC utils)
+
+install(TARGETS ecs EXPORT main
+    FILE_SET CXX_MODULES DESTINATION modules
+)
