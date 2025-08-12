@@ -41,7 +41,7 @@ jobs:
     env:
       CMAKE_WORKFLOW_PRESET: ${{ format('{0}{1}', matrix.preset, (matrix.compiler == 'llvm' && '-llvm' || '')) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
 
